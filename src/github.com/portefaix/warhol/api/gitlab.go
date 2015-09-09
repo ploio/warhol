@@ -54,11 +54,6 @@ func (ws *WebService) GitlabTagHandler(c *echo.Context) error {
 	project := ws.Builder.NewProject(
 		hook.Repository.Name, "Dockerfile", hook.Repository.URL)
 	err = ws.Builder.ToPipeline(project)
-	// go ws.Builder.BuildImage(
-	// 	hook.Repository.Name,
-	// 	//hook.Repository.URL,
-	// 	"github.com/nlamirault/aneto",
-	// 	"Dockerfile")
 	if err != nil {
 		return c.JSON(http.StatusBadRequest,
 			&ErrorResponse{

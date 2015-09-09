@@ -87,47 +87,6 @@ func getImageName(name string) string {
 	return fmt.Sprintf("warhol/%s", name)
 }
 
-// BuildImage builds an image from Dockerfile.
-// func (db *Builder) BuildImage(name string, remote string, dockerfile string) error {
-// 	log.Infof("[docker] Start building image : %s", name)
-// 	logsReader, outputbuf := io.Pipe()
-// 	imageName := getImageName(name)
-// 	go func(reader io.Reader) {
-// 		scanner := bufio.NewScanner(reader)
-// 		for scanner.Scan() {
-// 			log.Debugf("[docker] %s", scanner.Text())
-// 		}
-// 		if err := scanner.Err(); err != nil {
-// 			log.Infof("[docker] There was an error with the scanner in attached container %v", err)
-// 		}
-// 	}(logsReader)
-
-// 	opts := docker.BuildImageOptions{
-// 		Name:         imageName,
-// 		Dockerfile:   dockerfile,
-// 		Remote:       remote,
-// 		OutputStream: outputbuf,
-// 	}
-
-// 	err := db.Client.BuildImage(opts)
-// 	if err != nil {
-// 		log.Errorf("[docker] Can't build image %s : %v", name, err)
-// 		return err
-// 	}
-// 	log.Infof("[docker] Build image done : %s", imageName)
-// 	images <- imageName
-// 	return nil
-// }
-
-// PushImage read channel and push to registry the new image
-// func (db *Builder) PushImage() error {
-// 	imageName := <-images
-// 	log.Infof("[docker] Start pushing image : %s", imageName)
-// 	return nil
-// }
-
-// TODO
-
 // ToPipeline send a project to build pipeline
 func (db *Builder) ToPipeline(project *Project) error {
 	log.Printf("[INFO] [docker] Send project to pipeline : %v", project)
@@ -193,7 +152,7 @@ func (db *Builder) Push() error {
 
 	err := db.Client.PushImage(opts, db.AuthConfig)
 	if err != nil {
-		log.Printf("[ERROR] [docker] Can't build image %s : %v", imageName, err)
+		log.Printf("[ERROR] [docker] Can't push image %s : %v", imageName, err)
 		return err
 	}
 	return nil
