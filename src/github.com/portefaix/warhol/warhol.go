@@ -34,6 +34,9 @@ var (
 	dockerTLSVerify bool
 	dockerCertPath  string
 	registryURL     string
+	username        string
+	password        string
+	email           string
 )
 
 func init() {
@@ -45,7 +48,10 @@ func init() {
 	flag.StringVar(&dockerHost, "docker-host", "unix:///var/run/docker.sock", "address of Docker host")
 	flag.BoolVar(&dockerTLSVerify, "docker-tls-verify", false, "use TLS client for Docker")
 	flag.StringVar(&dockerCertPath, "docker-cert-path", "", "path to the cert.pem, key.pem, and ca.pem for authenticating to Docker")
-	flag.StringVar(&registryURL, "registry-url", "192.168.59.103:5000", "host:port of the registry for pushing images")
+	flag.StringVar(&registryURL, "registry-url", "127.0.0.1:5000", "host:port of the registry for pushing images")
+	flag.StringVar(&username, "username", "", "Username used for Docker registry")
+	flag.StringVar(&password, "password", "", "Password used for Docker registry")
+	flag.StringVar(&password, "email", "", "Email used for Docker registry")
 	flag.Parse()
 }
 
@@ -62,7 +68,16 @@ func main() {
 	}
 	log.Print("[INFO] [warhol] Creates the Docker builder")
 	builder, err := docker.NewBuilder(
-		dockerHost, dockerTLSVerify, dockerCertPath, registryURL)
+		dockerHost,
+		dockerTLSVerify,
+		dockerCertPath,
+		registryURL,
+		&docker.Authentication{
+			Username: username,
+			Password: password,
+			Email:    email,
+		})
+
 	if err != nil {
 		log.Printf("[FATAL] [warhol] Error with Docker : %v", err)
 		return
@@ -72,8 +87,9 @@ func main() {
 	e := api.GetWebService(builder)
 	if debug {
 		e.Debug()
+		builder.Debug()
 	}
-	log.Printf("[INFO] [warhol] Warhol is ready on %s", port)
 
+	log.Printf("[INFO] [warhol] Warhol is ready on %s", port)
 	e.Run(fmt.Sprintf(":%s", port))
 }

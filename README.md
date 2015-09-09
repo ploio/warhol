@@ -2,6 +2,26 @@
 
 [![Travis](https://img.shields.io/travis/portefaix/warhol.svg)]()
 
+Warhol is a Docker image factory system. It receives web hook from Git providers
+and build Docker image.
+Providers supported :
+
+[x] Gitlab
+[ ] Github
+
+## Usage
+
+Launch the web service :
+
+	$ warhol -d
+	2015/09/09 12:11:09 [INFO] [warhol] Creates the Docker builder
+	2015/09/09 12:11:09 [DEBUG] [api] Creates webservice
+	2015/09/09 12:11:09 [INFO] [warhol] Warhol is ready on 8080
+
+Setup your webhooks URI (Ex with Gitlab) :
+
+- Tag push events : http://x.x.x.x:8080/api/v1/notification/gitlab/tag
+- Push events : http://x.x.x.x:8080/api/v1/notification/gitlab/push
 
 
 ## Development

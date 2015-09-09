@@ -47,8 +47,15 @@ type Builder struct {
 	PushChan chan *Project
 }
 
+// Authentication represents authentication option for Docker registry
+type Authentication struct {
+	Username string
+	Password string
+	Email    string
+}
+
 // NewBuilder creates a new instance of DockerBuilder
-func NewBuilder(host string, tls bool, certPath string, registryURL string) (*Builder, error) {
+func NewBuilder(host string, tls bool, certPath string, registryURL string, auth *Authentication) (*Builder, error) {
 	var client *docker.Client
 	var err error
 	if tls {
@@ -62,13 +69,35 @@ func NewBuilder(host string, tls bool, certPath string, registryURL string) (*Bu
 	if err != nil {
 		return nil, err
 	}
-	return &Builder{
+	authConf := docker.AuthConfiguration{
+		Username:      auth.Username,
+		Password:      auth.Password,
+		Email:         auth.Email,
+		ServerAddress: registryURL,
+	}
+	log.Printf("[INFO] [docker] Check Docker authentication: %v", authConf)
+	if client.AuthCheck(&authConf) != nil {
+		log.Printf("[ERROR] [docker] Can't authenticate : %v", err)
+		return nil, err
+	}
+	builder := &Builder{
 		Client:      client,
 		RegistryURL: registryURL,
-		AuthConfig:  docker.AuthConfiguration{},
+		AuthConfig:  authConf,
 		BuildChan:   make(chan *Project),
 		PushChan:    make(chan *Project),
-	}, nil
+	}
+	log.Printf("[DEBUG] [docker] Creating Docker builder : %#v", builder)
+	env, err := builder.Client.Version()
+	if err != nil {
+		log.Printf("[WARN] [docker] Can't retrieve Docker version: %v",
+			err)
+	} else {
+		log.Printf("[INFO] [docker] %v", env)
+	}
+
+	return builder, nil
+
 }
 
 // Project represents a Git project
@@ -85,6 +114,16 @@ func (db *Builder) NewProject(name string, dockerfile string, remote string) *Pr
 
 func getImageName(name string) string {
 	return fmt.Sprintf("warhol/%s", name)
+}
+
+func (db *Builder) Debug() {
+	env, err := db.Client.Info()
+	if err != nil {
+		log.Printf("[WARN] [docker] Can't retrieve Docker informations: %v",
+			err)
+		return
+	}
+	log.Printf("[DEBUG] [docker] %#v", env)
 }
 
 // ToPipeline send a project to build pipeline
