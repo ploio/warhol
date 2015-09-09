@@ -15,10 +15,11 @@
 package api
 
 import (
-	// "fmt"
+	"fmt"
+	"log"
 	"net/http"
 
-	log "github.com/Sirupsen/logrus"
+	//log "github.com/Sirupsen/logrus"
 	"github.com/labstack/echo"
 
 	"github.com/portefaix/warhol/providers/gitlab"
@@ -26,32 +27,56 @@ import (
 
 // GitlabPushHandler receive a Gitlab push event notification
 func (ws *WebService) GitlabPushHandler(c *echo.Context) error {
-	log.Infof("Gitlab receive Push event notification")
+	log.Printf("[INFO] [gitlab] receive Push event notification")
 	var hook gitlab.PushWebhook
-	c.Bind(&hook)
-	log.Debugf("Gitlab Push webhook: %s", hook)
+	err := c.Bind(&hook)
+	if err != nil {
+		return c.JSON(http.StatusBadRequest,
+			&ErrorResponse{
+				Error: fmt.Sprintf("Invalid JSON content : %v", err)})
+	}
+	log.Printf("[DEBUG] [gitlab] Push webhook: %#v", hook)
 	return c.JSON(http.StatusOK, &StatusResponse{Status: "ok"})
 }
 
 // GitlabTagHandler receive a Gitlab tag event notification
 func (ws *WebService) GitlabTagHandler(c *echo.Context) error {
-	log.Infof("Gitlab receive Tag event notification")
+	log.Printf("[INFO] [gitlab] receive Tag event notification")
 	var hook gitlab.TagWebhook
-	c.Bind(&hook)
-	log.Debugf("Gitlab Tag webhook: %s", hook)
-	log.Infof("Gitlab Tag for project %s", hook.ProjectID)
-	//bot := workers.Workers["irc"]
-	//go bot.NotifyTag(hook)
-	// ipp := workers.Workers["ipp"]
-	// go ipp.NotifyTag(hook)
+	err := c.Bind(&hook)
+	if err != nil {
+		return c.JSON(http.StatusBadRequest,
+			&ErrorResponse{
+				Error: fmt.Sprintf("Invalid JSON content : %v", err)})
+	}
+	log.Printf("[DEBUG] [gitlab] Tag webhook: %#v", hook)
+	log.Printf("[INFO] [gitlab] Tag for project %v", hook.Repository.Name)
+	project := ws.Builder.NewProject(
+		hook.Repository.Name, "Dockerfile", hook.Repository.URL)
+	err = ws.Builder.ToPipeline(project)
+	// go ws.Builder.BuildImage(
+	// 	hook.Repository.Name,
+	// 	//hook.Repository.URL,
+	// 	"github.com/nlamirault/aneto",
+	// 	"Dockerfile")
+	if err != nil {
+		return c.JSON(http.StatusBadRequest,
+			&ErrorResponse{
+				Error: fmt.Sprintf("Can't manage hook : %v", err)})
+	}
 	return c.JSON(http.StatusOK, &StatusResponse{Status: "ok"})
 }
 
 // GitlabIssueHandler receive a Gitlab tag event notification
 func (ws *WebService) GitlabIssueHandler(c *echo.Context) error {
-	log.Infof("Gitlab receive Issue event notification")
+	log.Printf("[INFO] [gitlab] receive Issue event notification")
 	var hook gitlab.IssueWebhook
-	c.Bind(&hook)
-	log.Debugf("Gitlab Issue webhook: %s", hook)
+	err := c.Bind(&hook)
+	if err != nil {
+		return c.JSON(http.StatusBadRequest,
+			&ErrorResponse{
+				Error: fmt.Sprintf("Invalid JSON content : %v", err)})
+	}
+	log.Printf("[INFO] [gitlab] Issue webhook: %#v", hook)
 	return c.JSON(http.StatusOK, &StatusResponse{Status: "ok"})
 }

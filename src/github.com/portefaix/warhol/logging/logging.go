@@ -12,23 +12,23 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package api
+package logging
 
 import (
-	// "fmt"
-	//"log"
-	"net/http"
+	//"fmt"
+	"log"
+	"os"
 
-	//log "github.com/Sirupsen/logrus"
-	"github.com/labstack/echo"
+	//logging "github.com/op/go-logging"
+	"github.com/hashicorp/logutils"
 )
 
-// Version represents version of the REST API
-type Version struct {
-	Version string `json:"version"`
-}
-
-// DisplayAPIVersion sends the API version in JSON format
-func (ws *WebService) DisplayAPIVersion(c *echo.Context) error {
-	return c.JSON(http.StatusOK, &Version{Version: "1"})
+// SetLogging initialize logging
+func SetLogging(level string) {
+	filter := &logutils.LevelFilter{
+		Levels:   []logutils.LogLevel{"DEBUG", "WARN", "ERROR"},
+		MinLevel: logutils.LogLevel(level),
+		Writer:   os.Stderr,
+	}
+	log.SetOutput(filter)
 }

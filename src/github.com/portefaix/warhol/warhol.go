@@ -17,17 +17,23 @@ package main
 import (
 	"flag"
 	"fmt"
+	"log"
 
-	log "github.com/Sirupsen/logrus"
+	//log "github.com/Sirupsen/logrus"
 
 	"github.com/portefaix/warhol/api"
+	"github.com/portefaix/warhol/logging"
 	"github.com/portefaix/warhol/providers/docker"
 )
 
 var (
-	port    string
-	debug   bool
-	version bool
+	port            string
+	debug           bool
+	version         bool
+	dockerHost      string
+	dockerTLSVerify bool
+	dockerCertPath  string
+	registryURL     string
 )
 
 func init() {
@@ -36,31 +42,38 @@ func init() {
 	flag.BoolVar(&version, "v", false, "print version and exit (shorthand)")
 	flag.BoolVar(&debug, "d", false, "run in debug mode")
 	flag.StringVar(&port, "port", "8080", "port to use")
+	flag.StringVar(&dockerHost, "docker-host", "unix:///var/run/docker.sock", "address of Docker host")
+	flag.BoolVar(&dockerTLSVerify, "docker-tls-verify", false, "use TLS client for Docker")
+	flag.StringVar(&dockerCertPath, "docker-cert-path", "", "path to the cert.pem, key.pem, and ca.pem for authenticating to Docker")
+	flag.StringVar(&registryURL, "registry-url", "192.168.59.103:5000", "host:port of the registry for pushing images")
 	flag.Parse()
 }
 
 func main() {
 	if debug {
-		log.SetLevel(log.DebugLevel)
+		//log.SetLevel(log.DebugLevel)
+		logging.SetLogging("DEBUG")
+	} else {
+		logging.SetLogging("INFO")
 	}
 	if version {
 		fmt.Printf("Warhol v%s\n", Version)
 		return
 	}
-	e := api.GetWebService()
+	log.Print("[INFO] [warhol] Creates the Docker builder")
+	builder, err := docker.NewBuilder(
+		dockerHost, dockerTLSVerify, dockerCertPath, registryURL)
+	if err != nil {
+		log.Printf("[FATAL] [warhol] Error with Docker : %v", err)
+		return
+	}
+	go builder.Build()
+	go builder.Push()
+	e := api.GetWebService(builder)
 	if debug {
 		e.Debug()
 	}
-	log.Info("Launch Docker builder")
-	dockerBuilder, err := docker.NewDockerBuilder()
-	if err != nil {
-		log.Fatalf("Error with Docker : %v", err)
-		return
-	}
-	log.Info("Build image")
-	err = dockerBuilder.BuildImage("foo",
-		"/home/nlamirault/Perso/Portefaix/warhol/Dockerfile")
-	log.Infof("Docker err : %v", err)
-	log.Infof("Launch Warhol on %s", port)
+	log.Printf("[INFO] [warhol] Warhol is ready on %s", port)
+
 	e.Run(fmt.Sprintf(":%s", port))
 }

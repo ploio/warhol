@@ -15,11 +15,14 @@
 package api
 
 import (
+	"log"
 	"net/http"
 
-	log "github.com/Sirupsen/logrus"
+	// log "github.com/Sirupsen/logrus"
 	"github.com/labstack/echo"
 	"github.com/labstack/echo/middleware"
+
+	"github.com/portefaix/warhol/providers/docker"
 )
 
 // StatusResponse represents a status response of the REST API
@@ -34,12 +37,13 @@ type ErrorResponse struct {
 
 // WebService represents the Restful API
 type WebService struct {
+	Builder *docker.Builder
 }
 
 // NewWebService creates a new WebService instance
-func NewWebService() *WebService {
-	log.Debugf("Creates webservice")
-	return &WebService{}
+func NewWebService(builder *docker.Builder) *WebService {
+	log.Print("[DEBUG] [api] Creates webservice")
+	return &WebService{Builder: builder}
 }
 
 // Help send a message in JSON
@@ -49,8 +53,8 @@ func (ws *WebService) Help(c *echo.Context) error {
 }
 
 // GetWebService return a new web service
-func GetWebService() *echo.Echo {
-	ws := NewWebService()
+func GetWebService(builder *docker.Builder) *echo.Echo {
+	ws := NewWebService(builder)
 	e := echo.New()
 	// Middleware
 	e.Use(middleware.Logger())

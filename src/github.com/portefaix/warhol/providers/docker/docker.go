@@ -15,43 +15,186 @@
 package docker
 
 import (
-	"bytes"
+	"bufio"
+	"log"
+	//"bytes"
 	"fmt"
+	"io"
 
+	// log "github.com/Sirupsen/logrus"
 	"github.com/fsouza/go-dockerclient"
 )
-
-// DockerBuilder builds Docker images
-type DockerBuilder struct {
-	*docker.Client
-}
 
 // SOCKET represents the Docker socket endpoint
 const SOCKET = "unix:///var/run/docker.sock"
 
-// NewDockerBuilder creates a new instance of DockerBuilder
-func NewDockerBuilder() (*DockerBuilder, error) {
-	client, err := docker.NewClient(SOCKET)
+// Builder builds Docker images
+type Builder struct {
+
+	// Docker client instance
+	*docker.Client
+
+	// Registry server to push the image
+	RegistryURL string
+
+	// Represents the authentication in the Docker index server
+	AuthConfig docker.AuthConfiguration
+
+	// Channel to build image
+	BuildChan chan *Project
+
+	// Channel to push image
+	PushChan chan *Project
+}
+
+// NewBuilder creates a new instance of DockerBuilder
+func NewBuilder(host string, tls bool, certPath string, registryURL string) (*Builder, error) {
+	var client *docker.Client
+	var err error
+	if tls {
+		cert := fmt.Sprintf("%s/cert.pem", certPath)
+		key := fmt.Sprintf("%s/key.pem", certPath)
+		ca := fmt.Sprintf("%s/ca.pem", certPath)
+		client, err = docker.NewTLSClient(host, cert, key, ca)
+	} else {
+		client, err = docker.NewClient(host)
+	}
 	if err != nil {
 		return nil, err
 	}
-	return &DockerBuilder{
-		Client: client,
+	return &Builder{
+		Client:      client,
+		RegistryURL: registryURL,
+		AuthConfig:  docker.AuthConfiguration{},
+		BuildChan:   make(chan *Project),
+		PushChan:    make(chan *Project),
 	}, nil
+}
+
+// Project represents a Git project
+type Project struct {
+	Name       string
+	Dockerfile string
+	Remote     string
+}
+
+// NewProject creates a new instance of Project
+func (db *Builder) NewProject(name string, dockerfile string, remote string) *Project {
+	return &Project{Name: name, Dockerfile: "Dockerfile", Remote: remote}
 }
 
 func getImageName(name string) string {
 	return fmt.Sprintf("warhol/%s", name)
 }
 
-func (db *DockerBuilder) BuildImage(name string, dockerfile string) error {
-	var buf bytes.Buffer
+// BuildImage builds an image from Dockerfile.
+// func (db *Builder) BuildImage(name string, remote string, dockerfile string) error {
+// 	log.Infof("[docker] Start building image : %s", name)
+// 	logsReader, outputbuf := io.Pipe()
+// 	imageName := getImageName(name)
+// 	go func(reader io.Reader) {
+// 		scanner := bufio.NewScanner(reader)
+// 		for scanner.Scan() {
+// 			log.Debugf("[docker] %s", scanner.Text())
+// 		}
+// 		if err := scanner.Err(); err != nil {
+// 			log.Infof("[docker] There was an error with the scanner in attached container %v", err)
+// 		}
+// 	}(logsReader)
+
+// 	opts := docker.BuildImageOptions{
+// 		Name:         imageName,
+// 		Dockerfile:   dockerfile,
+// 		Remote:       remote,
+// 		OutputStream: outputbuf,
+// 	}
+
+// 	err := db.Client.BuildImage(opts)
+// 	if err != nil {
+// 		log.Errorf("[docker] Can't build image %s : %v", name, err)
+// 		return err
+// 	}
+// 	log.Infof("[docker] Build image done : %s", imageName)
+// 	images <- imageName
+// 	return nil
+// }
+
+// PushImage read channel and push to registry the new image
+// func (db *Builder) PushImage() error {
+// 	imageName := <-images
+// 	log.Infof("[docker] Start pushing image : %s", imageName)
+// 	return nil
+// }
+
+// TODO
+
+// ToPipeline send a project to build pipeline
+func (db *Builder) ToPipeline(project *Project) error {
+	log.Printf("[INFO] [docker] Send project to pipeline : %v", project)
+	db.BuildChan <- project
+	return nil
+}
+
+// Build read channel and build Docker image
+func (db *Builder) Build() error {
+	project := <-db.BuildChan
+	log.Printf("[INFO] [docker] Start building project : %v", project)
+	imageName := getImageName(project.Name)
+	logsReader, outputbuf := io.Pipe()
+	go func(reader io.Reader) {
+		scanner := bufio.NewScanner(reader)
+		for scanner.Scan() {
+			log.Printf("[DEBUG] [docker] %s", scanner.Text())
+		}
+		if err := scanner.Err(); err != nil {
+			log.Printf("[WARN] [docker] There was an error with the scanner in attached container %v", err)
+		}
+	}(logsReader)
+
 	opts := docker.BuildImageOptions{
-		Name:           getImageName(name),
-		Dockerfile:     "Dockerfile",
-		Remote:         "github.com/nlamirault/aneto",
-		SuppressOutput: true,
-		OutputStream:   &buf,
+		Name:         imageName,
+		Dockerfile:   project.Dockerfile,
+		Remote:       "github.com/nlamirault/aneto", //project.Remote,
+		OutputStream: outputbuf,
 	}
-	return db.Client.BuildImage(opts)
+
+	err := db.Client.BuildImage(opts)
+	if err != nil {
+		log.Printf("[ERROR] [docker] Can't build image %s : %v", imageName, err)
+		return err
+	}
+	log.Printf("[INFO] [docker] Build image done : %s", imageName)
+	db.PushChan <- project
+	return nil
+}
+
+// Push read channel and push to registry the new image
+func (db *Builder) Push() error {
+	project := <-db.PushChan
+	log.Printf("[INFO] [docker] Start pushing project : %v", project)
+	imageName := getImageName(project.Name)
+	logsReader, outputbuf := io.Pipe()
+	go func(reader io.Reader) {
+		scanner := bufio.NewScanner(reader)
+		for scanner.Scan() {
+			log.Printf("[DEBUG] [docker] %s", scanner.Text())
+		}
+		if err := scanner.Err(); err != nil {
+			log.Printf("[WARN] [docker] There was an error with the scanner in attached container %v", err)
+		}
+	}(logsReader)
+
+	opts := docker.PushImageOptions{
+		Name:         imageName,
+		Tag:          "latest",
+		Registry:     db.RegistryURL,
+		OutputStream: outputbuf,
+	}
+
+	err := db.Client.PushImage(opts, db.AuthConfig)
+	if err != nil {
+		log.Printf("[ERROR] [docker] Can't build image %s : %v", imageName, err)
+		return err
+	}
+	return nil
 }
