@@ -6,8 +6,8 @@ Warhol is a Docker image factory system. It receives web hook from Git providers
 and build Docker image.
 Providers supported :
 
-[x] Gitlab
-[ ] Github
+* [x] Gitlab
+* [ ] Github
 
 ## Usage
 
