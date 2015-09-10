@@ -16,20 +16,13 @@ package logging
 
 import (
 	//"fmt"
-	"log"
-	"os"
-
-	//logging "github.com/op/go-logging"
-	"github.com/hashicorp/logutils"
+	//"log"
+	"testing"
 )
 
-// SetLogging initialize logging
-func SetLogging(level string) *logutils.LevelFilter {
-	filter := &logutils.LevelFilter{
-		Levels:   []logutils.LogLevel{"DEBUG", "INFO", "WARN", "ERROR", "FATAL"},
-		MinLevel: logutils.LogLevel(level),
-		Writer:   os.Stderr,
+func Test_SetupMinLevel(t *testing.T) {
+	filter := SetLogging("debug")
+	if filter.MinLevel != "debug" {
+		t.Fatalf("Invalid level. : %v", filter)
 	}
-	log.SetOutput(filter)
-	return filter
 }

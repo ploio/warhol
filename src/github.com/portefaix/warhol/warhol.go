@@ -55,6 +55,19 @@ func init() {
 	flag.Parse()
 }
 
+func getDockerBuilder() (*docker.Builder, error) {
+	return docker.NewBuilder(
+		dockerHost,
+		dockerTLSVerify,
+		dockerCertPath,
+		registryURL,
+		&docker.Authentication{
+			Username: username,
+			Password: password,
+			Email:    email,
+		})
+}
+
 func main() {
 	if debug {
 		//log.SetLevel(log.DebugLevel)
@@ -67,17 +80,7 @@ func main() {
 		return
 	}
 	log.Print("[INFO] [warhol] Creates the Docker builder")
-	builder, err := docker.NewBuilder(
-		dockerHost,
-		dockerTLSVerify,
-		dockerCertPath,
-		registryURL,
-		&docker.Authentication{
-			Username: username,
-			Password: password,
-			Email:    email,
-		})
-
+	builder, err := getDockerBuilder()
 	if err != nil {
 		log.Printf("[FATAL] [warhol] Error with Docker : %v", err)
 		return

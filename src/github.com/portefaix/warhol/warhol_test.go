@@ -12,24 +12,4 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package logging
-
-import (
-	//"fmt"
-	"log"
-	"os"
-
-	//logging "github.com/op/go-logging"
-	"github.com/hashicorp/logutils"
-)
-
-// SetLogging initialize logging
-func SetLogging(level string) *logutils.LevelFilter {
-	filter := &logutils.LevelFilter{
-		Levels:   []logutils.LogLevel{"DEBUG", "INFO", "WARN", "ERROR", "FATAL"},
-		MinLevel: logutils.LogLevel(level),
-		Writer:   os.Stderr,
-	}
-	log.SetOutput(filter)
-	return filter
-}
+package main
