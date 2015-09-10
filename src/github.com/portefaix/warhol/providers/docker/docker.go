@@ -106,14 +106,13 @@ func NewBuilder(host string, tls bool, certPath string, registryURL string, auth
 
 // Project represents a Git project
 type Project struct {
-	Name       string
-	Dockerfile string
-	Remote     string
+	Name   string
+	Remote string
 }
 
 // NewProject creates a new instance of Project
 func (db *Builder) NewProject(name string, dockerfile string, remote string) *Project {
-	return &Project{Name: name, Dockerfile: "Dockerfile", Remote: remote}
+	return &Project{Name: name, Remote: remote}
 }
 
 func getImageName(name string) string {
@@ -156,7 +155,6 @@ func (db *Builder) Build() error {
 
 	opts := docker.BuildImageOptions{
 		Name:         imageName,
-		Dockerfile:   project.Dockerfile,
 		Remote:       "github.com/nlamirault/aneto", //project.Remote,
 		OutputStream: outputbuf,
 	}
