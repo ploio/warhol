@@ -2,8 +2,8 @@
 
 [![Travis](https://img.shields.io/travis/portefaix/warhol.svg)]()
 
-Warhol is a Docker image factory system. It receives web hook from Git providers
-and build Docker image.
+Warhol is a Docker image factory system. It receives web hook from Git providers,
+build Docker image and push them to a Docker registry.
 Providers supported :
 
 * [x] Gitlab
