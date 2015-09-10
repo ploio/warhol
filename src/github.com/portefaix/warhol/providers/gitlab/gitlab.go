@@ -102,6 +102,7 @@ type IssueWebhook struct {
 	Attributes Attributes `json:"object_attributes"`
 }
 
+// ExtractTagFromRef extract tag name
 func ExtractTagFromRef(ref string) string {
 	tokens := strings.Split(ref, "/")
 	return tokens[len(tokens)-1]

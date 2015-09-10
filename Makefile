@@ -30,6 +30,8 @@ WARN_COLOR=\033[33;01m
 
 SRC=src/github.com/portefaix/warhol
 
+SRCS = $(shell git ls-files '*.go' | grep -v '^vendor/')
+
 VERSION=$(shell \
         grep "const Version" $(SRC)/version.go \
         |awk -F'=' '{print $$2}' \
@@ -61,14 +63,21 @@ init:
 	@go get -u github.com/golang/lint/golint
 	@go get -u github.com/kisielk/errcheck
 
+.PHONY: build
 build:
 	@echo -e "$(OK_COLOR)[$(APP)] Build $(NO_COLOR)"
 	@$(GB) build all
 
+.PHONY: test
 test:
 	@echo -e "$(OK_COLOR)[$(APP)] Launch unit tests $(NO_COLOR)"
 	@$(GB) test all -test.v=true
 
+.PHONY: lint
+lint:
+	@$(foreach file,$(SRCS),golint $(file) || exit;)
+
+.PHONY: release
 release: clean build
 	@echo -e "$(OK_COLOR)[$(APP)] Make archive $(VERSION) $(NO_COLOR)"
 	@rm -fr $(PACKAGE) && mkdir $(PACKAGE)

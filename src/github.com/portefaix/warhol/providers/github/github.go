@@ -14,6 +14,7 @@
 
 package github
 
+// Sender represents sender information from the webhook
 type Sender struct {
 	AvatarURL         string `json:"avatar_url"`
 	EventsURL         string `json:"events_url"`
@@ -35,23 +36,27 @@ type Sender struct {
 	URL               string `json:"url"`
 }
 
+// Owner represents owner information from the webhook
 type Owner struct {
 	Email interface{} `json:"email"`
 	Name  string      `json:"name"`
 }
 
+// Author represents author information from the webhook
 type Author struct {
 	Email    string `json:"email"`
 	Name     string `json:"name"`
 	Username string `json:"username"`
 }
 
+// Committer represents committer information from the webhook
 type Committer struct {
 	Email    string `json:"email"`
 	Name     string `json:"name"`
 	Username string `json:"username"`
 }
 
+// Commits represents commits information from the webhook
 type Commits []struct {
 	Added     []interface{} `json:"added"`
 	Author    Author        `json:"author"`
@@ -65,6 +70,7 @@ type Commits []struct {
 	URL       string        `json:"url"`
 }
 
+// HeadCommit represents head commits information from the webhook
 type HeadCommit struct {
 	Added     []interface{} `json:"added"`
 	Author    Author        `json:"author"`
@@ -78,6 +84,7 @@ type HeadCommit struct {
 	URL       string        `json:"url"`
 }
 
+// Organization represents organization information from the webhook
 type Organization struct {
 	AvatarURL        string `json:"avatar_url"`
 	EventsURL        string `json:"events_url"`
@@ -89,11 +96,13 @@ type Organization struct {
 	URL              string `json:"url"`
 }
 
+// Pusher represents pusher information from the webhook
 type Pusher struct {
 	Email string `json:"email"`
 	Name  string `json:"name"`
 }
 
+// Repository represents repository information from the webhook
 type Repository struct {
 	ArchiveURL       string      `json:"archive_url"`
 	AssigneesURL     string      `json:"assignees_url"`
@@ -167,7 +176,8 @@ type Repository struct {
 	WatchersCount    int         `json:"watchers_count"`
 }
 
-type GithubPushEvent struct {
+// PushEvent represents push event information from the webhook
+type PushEvent struct {
 	After        string       `json:"after"`
 	BaseRef      interface{}  `json:"base_ref"`
 	Before       string       `json:"before"`

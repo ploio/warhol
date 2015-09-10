@@ -18,6 +18,7 @@ import (
 	"bufio"
 	"log"
 	//"bytes"
+	"errors"
 	"fmt"
 	"io"
 
@@ -27,6 +28,11 @@ import (
 
 // SOCKET represents the Docker socket endpoint
 const SOCKET = "unix:///var/run/docker.sock"
+
+var (
+	// ErrDockerAuthentication Can't authenticate to Docker
+	ErrDockerAuthentication = errors.New("Docker authentication failed")
+)
 
 // Builder builds Docker images
 type Builder struct {
@@ -77,8 +83,7 @@ func NewBuilder(host string, tls bool, certPath string, registryURL string, auth
 	}
 	log.Printf("[INFO] [docker] Check Docker authentication: %v", authConf)
 	if client.AuthCheck(&authConf) != nil {
-		log.Printf("[ERROR] [docker] Can't authenticate : %v", err)
-		return nil, err
+		return nil, ErrDockerAuthentication
 	}
 	builder := &Builder{
 		Client:      client,
@@ -97,7 +102,6 @@ func NewBuilder(host string, tls bool, certPath string, registryURL string, auth
 	}
 
 	return builder, nil
-
 }
 
 // Project represents a Git project
@@ -116,6 +120,7 @@ func getImageName(name string) string {
 	return fmt.Sprintf("warhol/%s", name)
 }
 
+// Debug check Docker informations
 func (db *Builder) Debug() {
 	env, err := db.Client.Info()
 	if err != nil {
@@ -183,7 +188,7 @@ func (db *Builder) Push() error {
 	}(logsReader)
 
 	opts := docker.PushImageOptions{
-		Name:         imageName,
+		Name:         db.RegistryURL + "/" + imageName,
 		Tag:          "latest",
 		Registry:     db.RegistryURL,
 		OutputStream: outputbuf,
