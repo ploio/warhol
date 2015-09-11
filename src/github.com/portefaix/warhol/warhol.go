@@ -48,7 +48,7 @@ func init() {
 	flag.StringVar(&dockerHost, "docker-host", "unix:///var/run/docker.sock", "address of Docker host")
 	flag.BoolVar(&dockerTLSVerify, "docker-tls-verify", false, "use TLS client for Docker")
 	flag.StringVar(&dockerCertPath, "docker-cert-path", "", "path to the cert.pem, key.pem, and ca.pem for authenticating to Docker")
-	flag.StringVar(&registryURL, "registry-url", "127.0.0.1:5000", "host:port of the registry for pushing images")
+	flag.StringVar(&registryURL, "registry-url", docker.REGISTRY, "host:port of the registry for pushing images")
 	flag.StringVar(&username, "username", "", "Username used for Docker registry")
 	flag.StringVar(&password, "password", "", "Password used for Docker registry")
 	flag.StringVar(&password, "email", "", "Email used for Docker registry")
