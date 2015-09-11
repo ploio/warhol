@@ -98,3 +98,8 @@ release: clean build test lint vet
 	@gzip $(ARCHIVE)
 	@rm -fr $(PACKAGE)
 	@addons/github.sh $(VERSION)
+
+# for goprojectile
+.PHONY: gopath
+gopath:
+	echo GOPATH=`pwd`:`pwd`/vendor
