@@ -37,7 +37,7 @@ func Test_NewBuilderWithoutDockerServer(t *testing.T) {
 }
 
 func Test_DockerImageNameWithDefaultRegistry(t *testing.T) {
-	url := "registry.docker.com"
+	url := REGISTRY
 	client, _ := docker.NewClient(url)
 	db := &Builder{
 		Client:      client,
