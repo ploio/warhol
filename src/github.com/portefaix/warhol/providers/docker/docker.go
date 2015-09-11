@@ -26,8 +26,13 @@ import (
 	"github.com/fsouza/go-dockerclient"
 )
 
-// SOCKET represents the Docker socket endpoint
-const SOCKET = "unix:///var/run/docker.sock"
+const (
+	// SOCKET represents the Docker socket endpoint
+	SOCKET = "unix:///var/run/docker.sock"
+
+	// REGISTRY is the default Docker registry
+	REGISTRY = "index.docker.io"
+)
 
 var (
 	// ErrDockerAuthentication Can't authenticate to Docker
@@ -115,7 +120,11 @@ func (db *Builder) NewProject(name string, dockerfile string, remote string) *Pr
 	return &Project{Name: name, Remote: remote}
 }
 
-func getImageName(name string) string {
+// GetImageName returns the Docker image name (depends on Registry URL)
+func (db *Builder) GetImageName(name string) string {
+	if db.RegistryURL != REGISTRY {
+		return fmt.Sprintf("%s/warhol/%s", db.RegistryURL, name)
+	}
 	return fmt.Sprintf("warhol/%s", name)
 }
 
@@ -141,7 +150,7 @@ func (db *Builder) ToPipeline(project *Project) error {
 func (db *Builder) Build() error {
 	project := <-db.BuildChan
 	log.Printf("[INFO] [docker] Start building project : %v", project)
-	imageName := getImageName(project.Name)
+	imageName := db.GetImageName(project.Name)
 	logsReader, outputbuf := io.Pipe()
 	go func(reader io.Reader) {
 		scanner := bufio.NewScanner(reader)
@@ -155,10 +164,10 @@ func (db *Builder) Build() error {
 
 	opts := docker.BuildImageOptions{
 		Name:         imageName,
-		Remote:       "github.com/nlamirault/aneto", //project.Remote,
+		Remote:       project.Remote,
 		OutputStream: outputbuf,
 	}
-
+	log.Printf("[DEBUG] [docker] Building image : %s", imageName)
 	err := db.Client.BuildImage(opts)
 	if err != nil {
 		log.Printf("[ERROR] [docker] Can't build image %s : %v", imageName, err)
@@ -173,7 +182,7 @@ func (db *Builder) Build() error {
 func (db *Builder) Push() error {
 	project := <-db.PushChan
 	log.Printf("[INFO] [docker] Start pushing project : %v", project)
-	imageName := getImageName(project.Name)
+	imageName := db.GetImageName(project.Name)
 	logsReader, outputbuf := io.Pipe()
 	go func(reader io.Reader) {
 		scanner := bufio.NewScanner(reader)
@@ -186,16 +195,17 @@ func (db *Builder) Push() error {
 	}(logsReader)
 
 	opts := docker.PushImageOptions{
-		Name:         db.RegistryURL + "/" + imageName,
+		Name:         imageName,
 		Tag:          "latest",
 		Registry:     db.RegistryURL,
 		OutputStream: outputbuf,
 	}
-
+	log.Printf("[DEBUG] [docker] Pushing image : %s", imageName)
 	err := db.Client.PushImage(opts, db.AuthConfig)
 	if err != nil {
 		log.Printf("[ERROR] [docker] Can't push image %s : %v", imageName, err)
 		return err
 	}
+	log.Printf("[INFO] [docker] Push image done : %s", imageName)
 	return nil
 }

@@ -16,6 +16,8 @@ package docker
 
 import (
 	"testing"
+
+	"github.com/fsouza/go-dockerclient"
 )
 
 func Test_NewBuilderWithoutDockerServer(t *testing.T) {
@@ -31,5 +33,48 @@ func Test_NewBuilderWithoutDockerServer(t *testing.T) {
 		})
 	if err == nil {
 		t.Fatalf("Invalid Docker builder.")
+	}
+}
+
+func Test_DockerImageNameWithDefaultRegistry(t *testing.T) {
+	url := "registry.docker.com"
+	client, _ := docker.NewClient(url)
+	db := &Builder{
+		Client:      client,
+		RegistryURL: url,
+		AuthConfig: docker.AuthConfiguration{
+			Username:      "foo",
+			Password:      "bar",
+			Email:         "foo@bar.com",
+			ServerAddress: url,
+		},
+		BuildChan: make(chan *Project),
+		PushChan:  make(chan *Project),
+	}
+	name := db.GetImageName("foo")
+	if name != "warhol/foo" {
+		t.Fatalf("Invalid image name : %s", name)
+	}
+
+}
+
+func Test_DockerImageNameWithPrivateRegistry(t *testing.T) {
+	url := "registry.warhol.com"
+	client, _ := docker.NewClient(url)
+	db := &Builder{
+		Client:      client,
+		RegistryURL: url,
+		AuthConfig: docker.AuthConfiguration{
+			Username:      "foo",
+			Password:      "bar",
+			Email:         "foo@bar.com",
+			ServerAddress: url,
+		},
+		BuildChan: make(chan *Project),
+		PushChan:  make(chan *Project),
+	}
+	name := db.GetImageName("foo")
+	if name != "registry.warhol.com/warhol/foo" {
+		t.Fatalf("Invalid image name : %s", name)
 	}
 }
