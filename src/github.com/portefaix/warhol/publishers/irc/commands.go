@@ -12,7 +12,16 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package main
+package irc
 
-// Version represents the application version using SemVer
-const Version string = "0.1.0"
+import (
+	"fmt"
+
+	"github.com/fabioxgn/go-bot"
+
+	"github.com/portefaix/warhol/version"
+)
+
+func versionCmd(command *bot.Cmd) (msg string, err error) {
+	return fmt.Sprintf("Warhol v%s", version.Version), nil
+}

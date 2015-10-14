@@ -15,6 +15,8 @@
 package irc
 
 import (
+	"log"
+
 	"github.com/fabioxgn/go-bot"
 )
 
@@ -40,5 +42,11 @@ func NewPublisher(server string, channel string, user string, nick string, pass 
 
 // Run connect to the specified IRC server and starts the bot
 func (p *Publisher) Run() {
+	log.Printf("[INFO] [irc] IRC Publisher run: %v", p.Config)
+	bot.RegisterCommand(
+		"version",
+		"Display version of Warhol.",
+		"",
+		versionCmd)
 	bot.Run(p.Config)
 }

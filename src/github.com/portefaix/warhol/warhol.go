@@ -19,17 +19,16 @@ import (
 	"fmt"
 	"log"
 
-	//log "github.com/Sirupsen/logrus"
-
 	"github.com/portefaix/warhol/api"
 	"github.com/portefaix/warhol/logging"
 	"github.com/portefaix/warhol/providers/docker"
 	"github.com/portefaix/warhol/publishers/irc"
+	"github.com/portefaix/warhol/version"
 )
 
 var (
-	debug   bool
-	version bool
+	debug       bool
+	showVersion bool
 
 	// Web
 	port string
@@ -53,8 +52,8 @@ var (
 
 func init() {
 	// parse flags
-	flag.BoolVar(&version, "version", false, "print version and exit")
-	flag.BoolVar(&version, "v", false, "print version and exit (shorthand)")
+	flag.BoolVar(&showVersion, "version", false, "print version and exit")
+	flag.BoolVar(&showVersion, "v", false, "print version and exit (shorthand)")
 	flag.BoolVar(&debug, "d", false, "run in debug mode")
 	flag.StringVar(&port, "port", "8080", "port to use")
 	flag.StringVar(&dockerHost, "docker-host", "unix:///var/run/docker.sock", "address of Docker host")
@@ -96,8 +95,8 @@ func setupLogging(debug bool) {
 
 func main() {
 	setupLogging(debug)
-	if version {
-		fmt.Printf("Warhol v%s\n", Version)
+	if showVersion {
+		fmt.Printf("Warhol v%s\n", version.Version)
 		return
 	}
 	log.Print("[INFO] [warhol] Creates the Docker builder")
