@@ -14,6 +14,12 @@
 			"branch": "master"
 		},
 		{
+			"importpath": "github.com/fabioxgn/go-bot",
+			"repository": "https://github.com/fabioxgn/go-bot",
+			"revision": "4b8afdebbb46013946db9cd3c6a8c8e6f40495bd",
+			"branch": "master"
+		},
+		{
 			"importpath": "github.com/facebookgo/clock",
 			"repository": "https://github.com/facebookgo/clock",
 			"revision": "600d898af40aa09a7a93ecb9265d87b0504b6f03",
@@ -71,6 +77,12 @@
 			"path": "/color"
 		},
 		{
+			"importpath": "github.com/nlopes/slack",
+			"repository": "https://github.com/nlopes/slack",
+			"revision": "4a9ff5f6ed8bb0df51620f49ee90fc0858a2913e",
+			"branch": "master"
+		},
+		{
 			"importpath": "github.com/rs/cors",
 			"repository": "https://github.com/rs/cors",
 			"revision": "eb527c8097e0f19a3ff7b253a3fe70545070f420",
@@ -80,6 +92,12 @@
 			"importpath": "github.com/thoas/stats",
 			"repository": "https://github.com/thoas/stats",
 			"revision": "54ed61c2b47e263ae2f01b86837b0c4bd1da28e8",
+			"branch": "master"
+		},
+		{
+			"importpath": "github.com/thoj/go-ircevent",
+			"repository": "https://github.com/thoj/go-ircevent",
+			"revision": "988aaaacd937fc2748708c2a3b8ea5869be4d3a0",
 			"branch": "master"
 		},
 		{
