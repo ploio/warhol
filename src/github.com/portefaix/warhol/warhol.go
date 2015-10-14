@@ -24,12 +24,17 @@ import (
 	"github.com/portefaix/warhol/api"
 	"github.com/portefaix/warhol/logging"
 	"github.com/portefaix/warhol/providers/docker"
+	"github.com/portefaix/warhol/publishers/irc"
 )
 
 var (
-	port            string
-	debug           bool
-	version         bool
+	debug   bool
+	version bool
+
+	// Web
+	port string
+
+	// Docker
 	dockerHost      string
 	dockerTLSVerify bool
 	dockerCertPath  string
@@ -37,6 +42,13 @@ var (
 	username        string
 	password        string
 	email           string
+
+	// IRC
+	server  string
+	channel string
+	user    string
+	nick    string
+	pass    string
 )
 
 func init() {
@@ -52,6 +64,12 @@ func init() {
 	flag.StringVar(&username, "username", "", "Username used for Docker registry")
 	flag.StringVar(&password, "password", "", "Password used for Docker registry")
 	flag.StringVar(&password, "email", "", "Email used for Docker registry")
+	flag.StringVar(&server, "server", "irc.freenode.net:6697", "irc server")
+	flag.StringVar(&channel, "channel", "#portefaix-warhol", "irc channel")
+	flag.StringVar(&user, "user", "WarholBot", "irc user")
+	flag.StringVar(&nick, "nick", "WarholBot", "irc nick")
+	flag.StringVar(&pass, "pass", "", "irc pass")
+
 	flag.Parse()
 }
 
@@ -68,13 +86,16 @@ func getDockerBuilder() (*docker.Builder, error) {
 		})
 }
 
-func main() {
+func setupLogging(debug bool) {
 	if debug {
-		//log.SetLevel(log.DebugLevel)
 		logging.SetLogging("DEBUG")
 	} else {
 		logging.SetLogging("INFO")
 	}
+}
+
+func main() {
+	setupLogging(debug)
 	if version {
 		fmt.Printf("Warhol v%s\n", Version)
 		return
@@ -88,11 +109,12 @@ func main() {
 	go builder.Build()
 	go builder.Push()
 	e := api.GetWebService(builder)
+	ircBot := irc.NewPublisher(server, channel, user, nick, pass, debug)
 	if debug {
 		e.Debug()
 		builder.Debug()
 	}
-
+	go ircBot.Run()
 	log.Printf("[INFO] [warhol] Warhol is ready on %s", port)
 	e.Run(fmt.Sprintf(":%s", port))
 }
