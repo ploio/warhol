@@ -22,8 +22,9 @@ import (
 	"fmt"
 	"io"
 
-	// log "github.com/Sirupsen/logrus"
 	"github.com/fsouza/go-dockerclient"
+
+	"github.com/portefaix/warhol/pubsub"
 )
 
 const (
@@ -58,7 +59,10 @@ type Builder struct {
 	PushChan chan *Project
 
 	// Channel for publishing
-	PublishChan chan *Project
+	// PublishChan chan *Project
+
+	// Broker define the messaging system
+	Broker pubsub.Broker
 }
 
 // Authentication represents authentication option for Docker registry
@@ -69,7 +73,7 @@ type Authentication struct {
 }
 
 // NewBuilder creates a new instance of DockerBuilder
-func NewBuilder(host string, tls bool, certPath string, registryURL string, auth *Authentication) (*Builder, error) {
+func NewBuilder(host string, tls bool, certPath string, registryURL string, auth *Authentication, broker pubsub.Broker) (*Builder, error) {
 	var client *docker.Client
 	var err error
 	if tls {
@@ -99,6 +103,7 @@ func NewBuilder(host string, tls bool, certPath string, registryURL string, auth
 		AuthConfig:  authConf,
 		BuildChan:   make(chan *Project),
 		PushChan:    make(chan *Project),
+		Broker:      broker,
 	}
 	log.Printf("[DEBUG] [docker] Creating Docker builder : %#v", builder)
 	env, err := builder.Client.Version()
@@ -145,6 +150,8 @@ func (db *Builder) Debug() {
 // ToPipeline send a project to build pipeline
 func (db *Builder) ToPipeline(project *Project) error {
 	log.Printf("[INFO] [docker] Send project to pipeline : %v", project)
+	db.Broker.Publish(pubsub.Channel,
+		fmt.Sprintf("New project request : %s", project))
 	db.BuildChan <- project
 	return nil
 }
@@ -153,6 +160,8 @@ func (db *Builder) ToPipeline(project *Project) error {
 func (db *Builder) Build() {
 	project := <-db.BuildChan
 	log.Printf("[INFO] [docker] Start building project : %v", project)
+	db.Broker.Publish(pubsub.Channel,
+		fmt.Sprintf("Build project : %s", project))
 	imageName := db.GetImageName(project.Name)
 	logsReader, outputbuf := io.Pipe()
 	go func(reader io.Reader) {
@@ -167,7 +176,7 @@ func (db *Builder) Build() {
 
 	opts := docker.BuildImageOptions{
 		Name:         imageName,
-		Remote:       project.Remote,
+		Remote:       "https://github.com/portefaix/warhol.git", //project.Remote,
 		OutputStream: outputbuf,
 	}
 	log.Printf("[DEBUG] [docker] Building image : %s", imageName)
@@ -176,6 +185,8 @@ func (db *Builder) Build() {
 		log.Printf("[ERROR] [docker] Can't build image %s : %v", imageName, err)
 	}
 	log.Printf("[INFO] [docker] Build image done : %s", imageName)
+	db.Broker.Publish(pubsub.Channel,
+		fmt.Sprintf("Project built : %s", project))
 	db.PushChan <- project
 }
 
@@ -183,6 +194,8 @@ func (db *Builder) Build() {
 func (db *Builder) Push() {
 	project := <-db.PushChan
 	log.Printf("[INFO] [docker] Start pushing project : %v", project)
+	db.Broker.Publish(pubsub.Channel,
+		fmt.Sprintf("Pushing project : %s", project))
 	imageName := db.GetImageName(project.Name)
 	logsReader, outputbuf := io.Pipe()
 	go func(reader io.Reader) {
@@ -207,4 +220,6 @@ func (db *Builder) Push() {
 		log.Printf("[ERROR] [docker] Can't push image %s : %v", imageName, err)
 	}
 	log.Printf("[INFO] [docker] Push image done : %s", imageName)
+	db.Broker.Publish(pubsub.Channel,
+		fmt.Sprintf("Project pushed : %s", project))
 }

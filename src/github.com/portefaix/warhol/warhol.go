@@ -23,6 +23,7 @@ import (
 	"github.com/portefaix/warhol/logging"
 	"github.com/portefaix/warhol/providers/docker"
 	"github.com/portefaix/warhol/publishers/irc"
+	"github.com/portefaix/warhol/pubsub"
 	"github.com/portefaix/warhol/version"
 )
 
@@ -34,55 +35,58 @@ var (
 	port string
 
 	// Docker
-	dockerHost      string
-	dockerTLSVerify bool
-	dockerCertPath  string
-	registryURL     string
-	username        string
-	password        string
-	email           string
+	dockerHost       string
+	dockerTLSVerify  bool
+	dockerCertPath   string
+	registryURL      string
+	registryUsername string
+	registryPassword string
+	registryEmail    string
 
 	// IRC
-	server  string
-	channel string
-	user    string
-	nick    string
-	pass    string
+	ircServer   string
+	ircChannel  string
+	ircUser     string
+	ircNickname string
+	ircPassword string
 )
 
 func init() {
-	// parse flags
+	// some flags
 	flag.BoolVar(&showVersion, "version", false, "print version and exit")
 	flag.BoolVar(&showVersion, "v", false, "print version and exit (shorthand)")
 	flag.BoolVar(&debug, "d", false, "run in debug mode")
+	// Web
 	flag.StringVar(&port, "port", "8080", "port to use")
+	// Docker
 	flag.StringVar(&dockerHost, "docker-host", "unix:///var/run/docker.sock", "address of Docker host")
 	flag.BoolVar(&dockerTLSVerify, "docker-tls-verify", false, "use TLS client for Docker")
 	flag.StringVar(&dockerCertPath, "docker-cert-path", "", "path to the cert.pem, key.pem, and ca.pem for authenticating to Docker")
 	flag.StringVar(&registryURL, "registry-url", docker.REGISTRY, "host:port of the registry for pushing images")
-	flag.StringVar(&username, "username", "", "Username used for Docker registry")
-	flag.StringVar(&password, "password", "", "Password used for Docker registry")
-	flag.StringVar(&password, "email", "", "Email used for Docker registry")
-	flag.StringVar(&server, "server", "irc.freenode.net:6697", "irc server")
-	flag.StringVar(&channel, "channel", "#portefaix-warhol", "irc channel")
-	flag.StringVar(&user, "user", "WarholBot", "irc user")
-	flag.StringVar(&nick, "nick", "WarholBot", "irc nick")
-	flag.StringVar(&pass, "pass", "", "irc pass")
+	flag.StringVar(&registryUsername, "registry-username", "", "Username used for Docker registry")
+	flag.StringVar(&registryPassword, "registry-password", "", "Password used for Docker registry")
+	flag.StringVar(&registryEmail, "registry-email", "", "Email used for Docker registry")
+	flag.StringVar(&ircServer, "irc-server", "irc.freenode.net:6697", "irc server")
+	flag.StringVar(&ircChannel, "irc-channel", "#portefaix-warhol", "irc channel")
+	flag.StringVar(&ircUser, "irc-user", "WarholBot", "irc user")
+	flag.StringVar(&ircNickname, "irc-nick", "WarholBot", "irc nick")
+	flag.StringVar(&ircPassword, "irc-pass", "", "irc pass")
 
 	flag.Parse()
 }
 
-func getDockerBuilder() (*docker.Builder, error) {
+func getDockerBuilder(broker pubsub.Broker) (*docker.Builder, error) {
 	return docker.NewBuilder(
 		dockerHost,
 		dockerTLSVerify,
 		dockerCertPath,
 		registryURL,
 		&docker.Authentication{
-			Username: username,
-			Password: password,
-			Email:    email,
-		})
+			Username: registryUsername,
+			Password: registryPassword,
+			Email:    registryEmail,
+		},
+		broker)
 }
 
 func setupLogging(debug bool) {
@@ -99,8 +103,21 @@ func main() {
 		fmt.Printf("Warhol v%s\n", version.Version)
 		return
 	}
+
+	// Messaging
+
+	log.Print("[INFO] [warhol] Creates the pubsub messaging")
+	//broker := zeromq.NewClient("localhost")
+	broker, err := pubsub.InitBroker("redis", "0.0.0.0")
+	if err != nil {
+		log.Printf("[ERROR] [warhol] %v", err)
+		return
+	}
+
+	// Builder
+
 	log.Print("[INFO] [warhol] Creates the Docker builder")
-	builder, err := getDockerBuilder()
+	builder, err := getDockerBuilder(broker)
 	if err != nil {
 		log.Printf("[FATAL] [warhol] Error with Docker : %v", err)
 		return
@@ -108,12 +125,25 @@ func main() {
 	go builder.Build()
 	go builder.Push()
 	e := api.GetWebService(builder)
-	ircBot := irc.NewPublisher(server, channel, user, nick, pass, debug)
+
+	// Services
+
+	ircBot := irc.NewPublisher(
+		&irc.Config{
+			Server:   ircServer,
+			Channel:  ircChannel,
+			Username: ircUser,
+			Nickname: ircNickname,
+			Password: ircPassword,
+		},
+		broker,
+		debug)
 	if debug {
 		e.Debug()
 		builder.Debug()
 	}
 	go ircBot.Run()
+
 	log.Printf("[INFO] [warhol] Warhol is ready on %s", port)
 	e.Run(fmt.Sprintf(":%s", port))
 }

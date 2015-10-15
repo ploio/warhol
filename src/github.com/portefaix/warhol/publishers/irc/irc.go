@@ -18,25 +18,36 @@ import (
 	"log"
 
 	"github.com/fabioxgn/go-bot"
+
+	"github.com/portefaix/warhol/pubsub"
 )
 
 type Publisher struct {
 	Config *bot.Config
+	Broker pubsub.Broker
+}
+
+type Config struct {
+	Server   string
+	Channel  string
+	Username string
+	Nickname string
+	Password string
 }
 
 // NewPublisher creates a new IRC bot publisher
-func NewPublisher(server string, channel string, user string, nick string, pass string,
-	debug bool) *Publisher {
+func NewPublisher(config *Config, broker pubsub.Broker, debug bool) *Publisher {
 	return &Publisher{
 		Config: &bot.Config{
-			Server:   server,
-			Channels: []string{channel},
-			User:     user,
-			Nick:     nick,
-			Password: pass,
+			Server:   config.Server,
+			Channels: []string{config.Channel},
+			User:     config.Username,
+			Nick:     config.Nickname,
+			Password: config.Password,
 			UseTLS:   true,
 			Debug:    debug,
 		},
+		Broker: broker,
 	}
 }
 
@@ -48,5 +59,14 @@ func (p *Publisher) Run() {
 		"Display version of Warhol.",
 		"",
 		versionCmd)
-	bot.Run(p.Config)
+	p.Broker.Subscribe(pubsub.Channel)
+	go func() {
+		msg, err := p.Broker.Receive()
+		if err != nil {
+			log.Printf("[WARN] [irc] PubSub error : %s", err.Error())
+		} else {
+			log.Printf("[INFO] [irc] PubSub message: %s", msg)
+		}
+	}()
+	go bot.Run(p.Config)
 }
