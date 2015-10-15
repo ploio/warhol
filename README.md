@@ -13,14 +13,42 @@ Warhol is a Docker image factory system. It receives web hook from Git providers
 build Docker image and push them to a Docker registry.
 Providers supported :
 
-* [x] Gitlab
-* [ ] Github
+* [Gitlab](https://gitlab.com/)
+* [Github](https://github.com/)
+
 
 ## Usage
 
+### Docker registry
+
+Configure Native basic auth:
+
+    $ mkdir auth
+    $ docker run --entrypoint htpasswd registry:2 -Bbn warhol warhol > auth/htpasswd
+
+Start the registry :
+
+    $ docker run --rm=true -p 5000:5000 -v `pwd`/auth:/auth \
+        --name registry registry:2
+
+Check authentication :
+
+    $ docker login 127.0.0.1:5000
+
+### Messaging
+
+Run Redis :
+
+    $ docker run --rm=true -p 6379:6379 --name redis redis:3
+
+
+### Factory web service
+
 Launch the web service :
 
-	$ warhol -d
+    $ bin/warhol -d=true \
+        -registry-username=warhol -registry-password=warhol --registry-url=127.0.0.1:5000 \
+        -redis-host=127.0.0.1
 	2015/09/09 12:11:09 [INFO] [warhol] Creates the Docker builder
 	2015/09/09 12:11:09 [DEBUG] [api] Creates webservice
 	2015/09/09 12:11:09 [INFO] [warhol] Warhol is ready on 8080
@@ -54,6 +82,7 @@ Then when a webhook tag is received, the image is built and pushed :
     2015/09/11 00:09:26 [DEBUG] [docker] Pushing tag for rev [7b0fe638246e] on {http://127.0.0.1:5000/v1/repositories/warhol/foo/tags/latest}
     2015/09/11 00:09:28 [INFO] [docker] Push image done : 127.0.0.1:5000/warhol/foo
 
+
 ## Development
 
 * Initialize environment
@@ -67,6 +96,11 @@ Then when a webhook tag is received, the image is built and pushed :
 * Launch unit tests :
 
         $ make test
+
+## Run on localhost
+
+
+
 
 ## Contributing
 
