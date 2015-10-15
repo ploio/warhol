@@ -56,6 +56,9 @@ type Builder struct {
 
 	// Channel to push image
 	PushChan chan *Project
+
+	// Channel for publishing
+	PublishChan chan *Project
 }
 
 // Authentication represents authentication option for Docker registry
@@ -147,7 +150,7 @@ func (db *Builder) ToPipeline(project *Project) error {
 }
 
 // Build read channel and build Docker image
-func (db *Builder) Build() error {
+func (db *Builder) Build() {
 	project := <-db.BuildChan
 	log.Printf("[INFO] [docker] Start building project : %v", project)
 	imageName := db.GetImageName(project.Name)
@@ -171,15 +174,13 @@ func (db *Builder) Build() error {
 	err := db.Client.BuildImage(opts)
 	if err != nil {
 		log.Printf("[ERROR] [docker] Can't build image %s : %v", imageName, err)
-		return err
 	}
 	log.Printf("[INFO] [docker] Build image done : %s", imageName)
 	db.PushChan <- project
-	return nil
 }
 
 // Push read channel and push to registry the new image
-func (db *Builder) Push() error {
+func (db *Builder) Push() {
 	project := <-db.PushChan
 	log.Printf("[INFO] [docker] Start pushing project : %v", project)
 	imageName := db.GetImageName(project.Name)
@@ -204,8 +205,6 @@ func (db *Builder) Push() error {
 	err := db.Client.PushImage(opts, db.AuthConfig)
 	if err != nil {
 		log.Printf("[ERROR] [docker] Can't push image %s : %v", imageName, err)
-		return err
 	}
 	log.Printf("[INFO] [docker] Push image done : %s", imageName)
-	return nil
 }
