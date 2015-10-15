@@ -13,6 +13,7 @@
 # limitations under the License.
 
 APP="warhol"
+
 EXE="bin/warhol"
 
 SHELL = /bin/bash
@@ -21,7 +22,7 @@ DIR = $(shell pwd)
 
 DOCKER = docker
 
-GB=$(GOPATH)/bin/gb
+GB = gb
 
 NO_COLOR=\033[0m
 OK_COLOR=\033[32;01m
@@ -79,12 +80,12 @@ test:
 
 .PHONY: lint
 lint:
-	@echo -e "$(OK_COLOR)[$(APP)] Go Lint $(NO_COLOR)"
+	@echo -e "$(OK_COLOR)[$(APP)] go lint $(NO_COLOR)"
 	@$(foreach file,$(SRCS),golint $(file) || exit;)
 
 .PHONY: vet
 vet:
-	@echo -e "$(OK_COLOR)[$(APP)] Go Vet $(NO_COLOR)"
+	@echo -e "$(OK_COLOR)[$(APP)] go vet $(NO_COLOR)"
 	@$(foreach file,$(SRCS),go vet $(file) || exit;)
 
 .PHONY: errcheck
@@ -110,4 +111,4 @@ release: clean build test lint vet
 # for goprojectile
 .PHONY: gopath
 gopath:
-	@echo "GOPATH=`pwd`:`pwd`/vendor"
+	@echo `pwd`:`pwd`/vendor
