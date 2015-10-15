@@ -1,6 +1,13 @@
 # Warhol
 
-[![Travis](https://img.shields.io/travis/portefaix/warhol.svg)]()
+[![License Apache 2][badge-license]](LICENSE)
+[![GitHub version](https://badge.fury.io/gh/nlamirault%2Fwarhol.svg)](https://badge.fury.io/gh/nlamirault%2Fwarhol)
+
+Master :
+* [![Circle CI](https://circleci.com/gh/nlamirault/warhol/tree/master.svg?style=svg)](https://circleci.com/gh/nlamirault/warhol/tree/master)
+
+Develop :
+* [![Circle CI](https://circleci.com/gh/nlamirault/warhol/tree/develop.svg?style=svg)](https://circleci.com/gh/nlamirault/warhol/tree/develop)
 
 Warhol is a Docker image factory system. It receives web hook from Git providers,
 build Docker image and push them to a Docker registry.
