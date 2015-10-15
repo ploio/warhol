@@ -34,7 +34,7 @@ SRCS = $(shell git ls-files '*.go' | grep -v '^vendor/')
 PKGS = $(shell find src -type f -print0 | xargs -0 -n 1 dirname | sort -u|sed -e "s/^src\///g")
 
 VERSION=$(shell \
-        grep "const Version" $(SRC)/version.go \
+        grep "const Version" $(SRC)/version/version.go \
         |awk -F'=' '{print $$2}' \
         |sed -e "s/[^0-9.]//g" \
 	|sed -e "s/ //g")
