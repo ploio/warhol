@@ -85,6 +85,10 @@ lint:
 vet:
 	@$(foreach file,$(SRCS),go vet $(file) || exit;)
 
+.PHONY: errcheck
+errcheck:
+	@GOPATH=`pwd`:`pwd`/vendor $(foreach pkg,$(PKGS),errcheck $(pkg) || exit;)
+
 .PHONY: coverage
 coverage:
 	@$(foreach pkg,$(PKGS),env GOPATH=`pwd`:`pwd`/vendor go test -cover $(pkg) || exit;)
@@ -102,4 +106,4 @@ release: clean build test lint vet
 # for goprojectile
 .PHONY: gopath
 gopath:
-	echo GOPATH=`pwd`:`pwd`/vendor
+	@echo "GOPATH=`pwd`:`pwd`/vendor"
