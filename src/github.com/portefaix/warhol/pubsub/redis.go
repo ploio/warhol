@@ -46,6 +46,7 @@ func NewRedisClient(host string, msgChan chan *Message) (*RedisClient, error) {
 	}, nil
 }
 
+// Subscribe subscribes the connection to the specified channels.
 func (client *RedisClient) Subscribe(channels ...interface{}) error {
 	for _, channel := range channels {
 		log.Printf("[INFO] [redis] Subscribe to [%s]\n", channel)
@@ -54,6 +55,7 @@ func (client *RedisClient) Subscribe(channels ...interface{}) error {
 	return nil
 }
 
+// Unsubscribe unsubscribes the connection from the given channels
 func (client *RedisClient) Unsubscribe(channels ...interface{}) error {
 	for _, channel := range channels {
 		log.Printf("[INFO] [redis] Unsubscribe to [%s]\n", channel)
@@ -62,6 +64,7 @@ func (client *RedisClient) Unsubscribe(channels ...interface{}) error {
 	return nil
 }
 
+// Publish send a message to a channel
 func (client *RedisClient) Publish(channel string, message string) {
 	log.Printf("[INFO] [redis] Publish: %s to [%s]\n", message, channel)
 	client.Mutex.Lock()
@@ -69,6 +72,7 @@ func (client *RedisClient) Publish(channel string, message string) {
 	client.Mutex.Unlock()
 }
 
+// Receive receive a pushed message
 func (client *RedisClient) Receive() {
 	for {
 		switch message := client.PubSubConn.Receive().(type) {

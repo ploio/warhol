@@ -23,7 +23,7 @@ func Test_UnsupportedBroker(t *testing.T) {
 	broker, err := NewBroker(&Config{
 		Type: "Foo",
 		Host: "localhost",
-	})
+	}, nil)
 	if broker != nil || err == nil {
 		t.Fatalf("Error retrieve an unsupported broker")
 	}
@@ -33,7 +33,7 @@ func Test_RedisBroker(t *testing.T) {
 	broker, err := NewBroker(&Config{
 		Type: REDIS,
 		Host: "127.0.0.1",
-	})
+	}, nil)
 	if broker == nil || err != nil {
 		t.Fatalf("Error creating Redis broker")
 	}
@@ -42,7 +42,7 @@ func Test_RedisBroker(t *testing.T) {
 func Test_ZeroMQBroker(t *testing.T) {
 	broker, err := NewBroker(&Config{
 		Type: ZEROMQ,
-	})
+	}, nil)
 	if broker == nil || err != nil {
 		t.Fatalf("Error creating ZeroMQ broker")
 	}

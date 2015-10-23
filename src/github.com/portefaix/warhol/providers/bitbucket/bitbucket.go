@@ -14,11 +14,13 @@
 
 package bitbucket
 
+// User defines the Bitbucket user object
 type User struct {
 	Username    string `json:"username"`
 	DisplayName string `json:"display_name"`
 }
 
+// Repository defines Bitbucket user object
 type Repository struct {
 	Name     string `json:"name"`
 	FullName string `json:"fill_name"`
@@ -39,6 +41,7 @@ type Repository struct {
 // 	Target Target `json:"target,omitempty"`
 // }
 
+// Commit defines the Bitbucket commit object
 type Commit struct {
 	Hash    string `json:"hash,omitempty"`
 	Type    string `json:"type,omitempty"`
@@ -46,6 +49,7 @@ type Commit struct {
 	Author  string `json:"author,omitempty"`
 }
 
+// Changes defines the Bitbucket changes object
 type Changes struct {
 	// New New `json:"new,omitempty"`
 	Created   bool     `json:"created"`
@@ -55,10 +59,12 @@ type Changes struct {
 	Commits   []Commit `json:"commits"`
 }
 
+// Push defines the Bitbucket push object
 type Push struct {
 	Changes []Changes `json:"changes"`
 }
 
+// PushWebHook defines the Bitbucket webhook object for push
 type PushWebHook struct {
 	Actor      User       `json:"actor"`
 	Repository Repository `json:"repository"`

@@ -22,12 +22,14 @@ import (
 	"github.com/portefaix/warhol/pubsub"
 )
 
+// Publisher represents an IRC publisher
 type Publisher struct {
 	Config  *bot.Config
 	Broker  pubsub.Broker
 	MsgChan chan *pubsub.Message
 }
 
+// Config defines IRC configuration
 type Config struct {
 	Server   string
 	Channel  string
@@ -72,6 +74,7 @@ func (p *Publisher) Run() {
 	go bot.Run(p.Config)
 }
 
+// Serve wait for messaging from Pub/Sub system
 func (p *Publisher) Serve() {
 	for {
 		message := <-p.MsgChan

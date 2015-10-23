@@ -29,6 +29,7 @@ type ZeroMQClient struct {
 	MsgCh chan *Message
 }
 
+// NewZeroMQClient creates a new ZeroMQClient instance
 func NewZeroMQClient(host string, msgChan chan *Message) (*ZeroMQClient, error) {
 	log.Printf("[INFO] [zeromq] PubSub: %s", host)
 	pub, err := zmq.NewSocket(zmq.PUB)
@@ -51,6 +52,7 @@ func NewZeroMQClient(host string, msgChan chan *Message) (*ZeroMQClient, error) 
 	}, nil
 }
 
+// Subscribe establish message filter
 func (client *ZeroMQClient) Subscribe(channels ...interface{}) error {
 	for _, channel := range channels {
 		log.Printf("[INFO] [zeromq] Subscribe to [%s]\n", channel)
@@ -59,6 +61,7 @@ func (client *ZeroMQClient) Subscribe(channels ...interface{}) error {
 	return nil
 }
 
+// Unsubscribe remove message filter
 func (client *ZeroMQClient) Unsubscribe(channels ...interface{}) error {
 	for _, channel := range channels {
 		log.Printf("[INFO] [zeromq] Unsubscribe to [%s]\n", channel)
@@ -67,11 +70,13 @@ func (client *ZeroMQClient) Unsubscribe(channels ...interface{}) error {
 	return nil
 }
 
+// Publish send a message to a channel
 func (client *ZeroMQClient) Publish(channel, message string) {
 	log.Printf("[INFO] [zeromq] Publish: %s to [%s]\n", message, channel)
 	client.Pub.Send(fmt.Sprintf("%s %s", channel, message), 0)
 }
 
+// Receive receive  parts as message from socket.
 func (client *ZeroMQClient) Receive() {
 	for {
 		message, err := client.Sub.RecvMessage(0)
@@ -83,7 +88,8 @@ func (client *ZeroMQClient) Receive() {
 		topic := message[0]
 		data := message[1]
 		if topic != Channel {
-			log.Printf("[WARN] [zeromq] Invalid message: %s %s", topic, data)
+			log.Printf("[WARN] [zeromq] Invalid message: %s %s",
+				topic, data)
 		}
 		msg := &Message{
 			Type:    "message",
