@@ -16,8 +16,6 @@ package pubsub
 
 import (
 	"errors"
-	"fmt"
-	//"log"
 )
 
 const (
@@ -63,18 +61,6 @@ type Broker interface {
 	Receive()
 }
 
-// SetupBroker creates an instance of Broker
-func SetupBroker(broker string, host string) (Broker, error) {
-	switch broker {
-	case REDIS:
-		return NewRedisClient(host)
-	case ZEROMQ:
-		return NewZeroMQClient(host), nil
-	default:
-		return nil, fmt.Errorf("%s %s", ErrNotSupported.Error(), "")
-	}
-}
-
 // NewBroker creates an instance of broker according to the configuration
 func NewBroker(config *Config) (Broker, error) {
 	switch config.Type {
@@ -83,6 +69,6 @@ func NewBroker(config *Config) (Broker, error) {
 	case ZEROMQ:
 		return NewZeroMQClient(config.Host), nil
 	default:
-		return nil, fmt.Errorf("%s %s", ErrNotSupported.Error(), "")
+		return nil, ErrNotSupported
 	}
 }

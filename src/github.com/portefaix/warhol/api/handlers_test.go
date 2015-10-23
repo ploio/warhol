@@ -21,6 +21,7 @@ import (
 	//"github.com/labstack/echo"
 
 	"github.com/portefaix/warhol/providers/docker"
+	"github.com/portefaix/warhol/pubsub"
 )
 
 var api = map[string]string{
@@ -41,7 +42,8 @@ func Test_WebServiceRoutes(t *testing.T) {
 			Username: "",
 			Password: "",
 			Email:    "",
-		})
+		},
+		&pubsub.Config{Type: pubsub.ZEROMQ})
 	ws := GetWebService(builder)
 	// fmt.Printf("Routes : %#v", ws.Routes())
 	routes := ws.Routes()

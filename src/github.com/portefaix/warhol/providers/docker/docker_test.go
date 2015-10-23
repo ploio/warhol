@@ -18,6 +18,8 @@ import (
 	"testing"
 
 	"github.com/fsouza/go-dockerclient"
+
+	"github.com/portefaix/warhol/pubsub"
 )
 
 func Test_NewBuilderWithoutDockerServer(t *testing.T) {
@@ -30,7 +32,8 @@ func Test_NewBuilderWithoutDockerServer(t *testing.T) {
 			Username: "foo",
 			Password: "bar",
 			Email:    "foo@bar.com",
-		})
+		},
+		&pubsub.Config{Type: pubsub.ZEROMQ})
 	if err == nil {
 		t.Fatalf("Invalid Docker builder.")
 	}
