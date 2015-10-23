@@ -155,7 +155,7 @@ func (db *Builder) ToPipeline(project *Project) error {
 	log.Printf("[INFO] [docker] Send project to pipeline : %v", project)
 	db.Broker.Publish(pubsub.Channel,
 		fmt.Sprintf("New project request : %s", project))
-	//db.BuildChan <- project
+	db.BuildChan <- project
 	return nil
 }
 
