@@ -24,11 +24,24 @@ Providers supported :
 Configure Native basic auth:
 
     $ mkdir auth
-    $ docker run --entrypoint htpasswd registry:2 -Bbn warhol warhol > auth/htpasswd
+    $ docker run --rm --entrypoint htpasswd registry:2 -Bbn warhol warhol > auth/htpasswd
+
+Generate TLS Certificates for the Registry
+
+    $ openssl req \
+         -newkey rsa:2048 -nodes -keyout certs/spc.key \
+         -x509 -days 365 -out certs/spc.crt
 
 Start the registry :
 
-    $ docker run --rm=true -p 5000:5000 -v `pwd`/auth:/auth \
+    $ docker run --rm=true -p 5000:5000 \
+        -v `pwd`/auth:/auth \
+        -e "REGISTRY_AUTH=htpasswd" \
+        -e "REGISTRY_AUTH_HTPASSWD_REALM=Registry Realm" \
+        -e REGISTRY_AUTH_HTPASSWD_PATH=/auth/htpasswd \
+        -v `pwd`/certs:/certs \
+        -e REGISTRY_HTTP_TLS_CERTIFICATE=/certs/spc.crt \
+        -e REGISTRY_HTTP_TLS_KEY=/certs/spc.key \
         --name registry registry:2
 
 Check authentication :
