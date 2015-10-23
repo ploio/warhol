@@ -62,12 +62,12 @@ type Broker interface {
 }
 
 // NewBroker creates an instance of broker according to the configuration
-func NewBroker(config *Config) (Broker, error) {
+func NewBroker(config *Config, msgChan chan *Message) (Broker, error) {
 	switch config.Type {
 	case REDIS:
-		return NewRedisClient(config.Host)
+		return NewRedisClient(config.Host, msgChan)
 	case ZEROMQ:
-		return NewZeroMQClient(config.Host), nil
+		return NewZeroMQClient(config.Host, msgChan)
 	default:
 		return nil, ErrNotSupported
 	}

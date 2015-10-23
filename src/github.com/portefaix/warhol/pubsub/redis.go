@@ -27,10 +27,11 @@ type RedisClient struct {
 	Conn       redis.Conn
 	PubSubConn redis.PubSubConn
 	Mutex      sync.Mutex
+	MsgCh      chan *Message
 }
 
 // NewRedisClient returns a new Redis client
-func NewRedisClient(host string) (*RedisClient, error) {
+func NewRedisClient(host string, msgChan chan *Message) (*RedisClient, error) {
 	log.Printf("[INFO] [redis] PubSub: %s", host)
 	conn, err := redis.Dial("tcp", fmt.Sprintf("%s:6379", host))
 	if err != nil {
@@ -41,6 +42,7 @@ func NewRedisClient(host string) (*RedisClient, error) {
 	return &RedisClient{
 		Conn:       conn,
 		PubSubConn: psc,
+		MsgCh:      msgChan,
 	}, nil
 }
 
@@ -77,6 +79,7 @@ func (client *RedisClient) Receive() {
 				Data:    string(message.Data),
 			}
 			log.Printf("[INFO] [redis] Receive: %v", msg)
+			client.MsgCh <- msg
 		case redis.PMessage:
 			msg := &Message{
 				Type:    "pmessage",
@@ -84,13 +87,14 @@ func (client *RedisClient) Receive() {
 				Data:    string(message.Data),
 			}
 			log.Printf("[INFO] [redis] Receive: %v", msg)
+			client.MsgCh <- msg
 		case redis.Pong:
 			msg := &Message{
 				Type:    "pong",
 				Channel: "",
 				Data:    string(message.Data),
 			}
-			log.Printf("[INFO] [redis] Receive: %v", msg)
+			log.Printf("[DEBUG] [redis] Receive: %v", msg)
 		case redis.Subscription:
 			msg := &Message{
 				Type:    message.Kind,

@@ -24,22 +24,31 @@ import (
 
 // ZeroMQClient - just defines the pub and sub ZMQ sockets.
 type ZeroMQClient struct {
-	Pub *zmq.Socket
-	Sub *zmq.Socket
+	Pub   *zmq.Socket
+	Sub   *zmq.Socket
+	MsgCh chan *Message
 }
 
-func NewZeroMQClient(host string) *ZeroMQClient {
+func NewZeroMQClient(host string, msgChan chan *Message) (*ZeroMQClient, error) {
 	log.Printf("[INFO] [zeromq] PubSub: %s", host)
-	pub, _ := zmq.NewSocket(zmq.PUB)
-	defer pub.Close()
+	pub, err := zmq.NewSocket(zmq.PUB)
+	if err != nil {
+		return nil, err
+	}
 	pub.Bind(fmt.Sprintf("tcp://%s:%d", host, 5556))
 	//  Ensure subscriber connection has time to complete
 	time.Sleep(time.Second)
 
-	sub, _ := zmq.NewSocket(zmq.SUB)
-	//defer sub.Close()
+	sub, err := zmq.NewSocket(zmq.SUB)
+	if err != nil {
+		return nil, err
+	}
 	sub.Connect(fmt.Sprintf("tcp://%s:%d", host, 5556))
-	return &ZeroMQClient{Pub: pub, Sub: sub}
+	return &ZeroMQClient{
+		Pub:   pub,
+		Sub:   sub,
+		MsgCh: msgChan,
+	}, nil
 }
 
 func (client *ZeroMQClient) Subscribe(channels ...interface{}) error {

@@ -23,8 +23,9 @@ import (
 )
 
 type Publisher struct {
-	Config *bot.Config
-	Broker pubsub.Broker
+	Config  *bot.Config
+	Broker  pubsub.Broker
+	MsgChan chan *pubsub.Message
 }
 
 type Config struct {
@@ -37,7 +38,8 @@ type Config struct {
 
 // NewPublisher creates a new IRC bot publisher
 func NewPublisher(config *Config, brokerConf *pubsub.Config, debug bool) (*Publisher, error) {
-	sub, err := pubsub.NewBroker(brokerConf)
+	msgChan := make(chan *pubsub.Message)
+	sub, err := pubsub.NewBroker(brokerConf, msgChan)
 	if err != nil {
 		return nil, err
 	}
@@ -51,7 +53,8 @@ func NewPublisher(config *Config, brokerConf *pubsub.Config, debug bool) (*Publi
 			UseTLS:   true,
 			Debug:    debug,
 		},
-		Broker: sub,
+		Broker:  sub,
+		MsgChan: msgChan,
 	}, nil
 }
 
@@ -65,5 +68,13 @@ func (p *Publisher) Run() {
 		versionCmd)
 	p.Broker.Subscribe(pubsub.Channel)
 	go p.Broker.Receive()
+	go p.Serve()
 	go bot.Run(p.Config)
+}
+
+func (p *Publisher) Serve() {
+	for {
+		message := <-p.MsgChan
+		log.Printf("[INFO] [irc] Message receive : %v", message)
+	}
 }

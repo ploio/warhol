@@ -58,11 +58,10 @@ type Builder struct {
 	// Channel to push image
 	PushChan chan *Project
 
-	// Channel for publishing
-	// PublishChan chan *Project
-
 	// Broker define the messaging system
 	Broker pubsub.Broker
+
+	MsgChan chan *pubsub.Message
 }
 
 // Authentication represents authentication option for Docker registry
@@ -97,7 +96,8 @@ func NewBuilder(host string, tls bool, certPath string, registryURL string, auth
 	if client.AuthCheck(&authConf) != nil {
 		return nil, ErrDockerAuthentication
 	}
-	pub, err := pubsub.NewBroker(brokerConf)
+	msgChan := make(chan *pubsub.Message)
+	pub, err := pubsub.NewBroker(brokerConf, msgChan)
 	if err != nil {
 		return nil, err
 	}
@@ -108,6 +108,7 @@ func NewBuilder(host string, tls bool, certPath string, registryURL string, auth
 		BuildChan:   make(chan *Project),
 		PushChan:    make(chan *Project),
 		Broker:      pub,
+		MsgChan:     msgChan,
 	}
 	log.Printf("[DEBUG] [docker] Creating Docker builder : %#v", builder)
 	env, err := builder.Client.Version()
