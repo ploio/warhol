@@ -8,7 +8,7 @@ import (
 	"io"
 	"log"
 	"net/http"
-	spath "path"
+	"path/filepath"
 	"reflect"
 	"runtime"
 	"strings"
@@ -16,8 +16,8 @@ import (
 
 	"encoding/xml"
 
-	"github.com/bradfitz/http2"
 	"github.com/labstack/gommon/color"
+	"golang.org/x/net/http2"
 	"golang.org/x/net/websocket"
 )
 
@@ -134,8 +134,9 @@ const (
 	Location           = "Location"
 	Upgrade            = "Upgrade"
 	Vary               = "Vary"
-	WWWAuthenticate = "WWW-Authenticate"
-
+	WWWAuthenticate    = "WWW-Authenticate"
+	XForwardedFor      = "X-Forwarded-For"
+	XRealIP            = "X-Real-IP"
 	//-----------
 	// Protocols
 	//-----------
@@ -174,8 +175,8 @@ var (
 		return NewHTTPError(http.StatusNotFound)
 	}
 
-	badRequestHandler = func(c *Context) error {
-		return NewHTTPError(http.StatusBadRequest)
+	methodNotAllowedHandler = func(c *Context) error {
+		return NewHTTPError(http.StatusMethodNotAllowed)
 	}
 )
 
@@ -250,9 +251,14 @@ func (e *Echo) SetRenderer(r Renderer) {
 	e.renderer = r
 }
 
-// Debug enables debug mode.
-func (e *Echo) Debug() {
-	e.debug = true
+// SetDebug enables/disables debug mode.
+func (e *Echo) SetDebug(on bool) {
+	e.debug = on
+}
+
+// Debug returns debug mode (enabled or disabled).
+func (e *Echo) Debug() bool {
+	return e.debug
 }
 
 // StripTrailingSlash enables removing trailing slash from the request path.
@@ -370,14 +376,14 @@ func (e *Echo) Static(path, dir string) {
 // ServeDir serves files from a directory.
 func (e *Echo) ServeDir(path, dir string) {
 	e.Get(path+"*", func(c *Context) error {
-		return serveFile(dir, c.P(0), c) // Param `_name`
+		return serveFile(dir, c.P(0), c) // Param `_*`
 	})
 }
 
 // ServeFile serves a file.
 func (e *Echo) ServeFile(path, file string) {
 	e.Get(path, func(c *Context) error {
-		dir, file := spath.Split(file)
+		dir, file := filepath.Split(file)
 		return serveFile(dir, file, c)
 	})
 }
@@ -388,10 +394,11 @@ func serveFile(dir, file string, c *Context) error {
 	if err != nil {
 		return NewHTTPError(http.StatusNotFound)
 	}
+	defer f.Close()
 
 	fi, _ := f.Stat()
 	if fi.IsDir() {
-		file = spath.Join(file, indexFile)
+		file = filepath.Join(file, indexFile)
 		f, err = fs.Open(file)
 		if err != nil {
 			return NewHTTPError(http.StatusForbidden)
@@ -408,7 +415,11 @@ func serveFile(dir, file string, c *Context) error {
 func (e *Echo) Group(prefix string, m ...Middleware) *Group {
 	g := &Group{*e}
 	g.echo.prefix += prefix
-	if len(m) > 0 {
+	if len(m) == 0 {
+		mw := make([]MiddlewareFunc, len(g.echo.middleware))
+		copy(mw, g.echo.middleware)
+		g.echo.middleware = mw
+	} else {
 		g.echo.middleware = nil
 		g.Use(m...)
 	}
@@ -453,10 +464,7 @@ func (e *Echo) Routes() []Route {
 // ServeHTTP implements `http.Handler` interface, which serves HTTP requests.
 func (e *Echo) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	c := e.pool.Get().(*Context)
-	h, echo := e.router.Find(r.Method, r.URL.Path, c)
-	if echo != nil {
-		e = echo
-	}
+	h, e := e.router.Find(r.Method, r.URL.Path, c)
 	c.reset(r, w, e)
 
 	// Chain middleware with handler in the end

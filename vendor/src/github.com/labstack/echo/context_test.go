@@ -94,7 +94,7 @@ func TestContext(t *testing.T) {
 	if assert.NoError(t, err) {
 		assert.Equal(t, http.StatusOK, rec.Code)
 		assert.Equal(t, ApplicationJSONCharsetUTF8, rec.Header().Get(ContentType))
-		assert.Equal(t, userJSON+"\n", rec.Body.String())
+		assert.Equal(t, userJSON, rec.Body.String())
 	}
 
 	// JSONP
@@ -105,7 +105,7 @@ func TestContext(t *testing.T) {
 	if assert.NoError(t, err) {
 		assert.Equal(t, http.StatusOK, rec.Code)
 		assert.Equal(t, ApplicationJavaScriptCharsetUTF8, rec.Header().Get(ContentType))
-		assert.Equal(t, callback+"("+userJSON+"\n);", rec.Body.String())
+		assert.Equal(t, callback+"("+userJSON+");", rec.Body.String())
 	}
 
 	// XML
@@ -141,7 +141,7 @@ func TestContext(t *testing.T) {
 	// File
 	rec = httptest.NewRecorder()
 	c = NewContext(req, NewResponse(rec), New())
-	err = c.File("test/fixture/walle.png", false)
+	err = c.File("test/fixture/walle.png", "", false)
 	if assert.NoError(t, err) {
 		assert.Equal(t, http.StatusOK, rec.Code)
 		assert.Equal(t, 219885, rec.Body.Len())
@@ -150,10 +150,10 @@ func TestContext(t *testing.T) {
 	// File as attachment
 	rec = httptest.NewRecorder()
 	c = NewContext(req, NewResponse(rec), New())
-	err = c.File("test/fixture/walle.png", true)
+	err = c.File("test/fixture/walle.png", "WALLE.PNG", true)
 	if assert.NoError(t, err) {
 		assert.Equal(t, http.StatusOK, rec.Code)
-		assert.Equal(t, rec.Header().Get(ContentDisposition), "attachment; filename=walle.png")
+		assert.Equal(t, rec.Header().Get(ContentDisposition), "attachment; filename=WALLE.PNG")
 		assert.Equal(t, 219885, rec.Body.Len())
 	}
 

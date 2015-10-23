@@ -9,15 +9,21 @@
 			"path": "/uuid"
 		},
 		{
-			"importpath": "github.com/bradfitz/http2",
-			"repository": "https://github.com/bradfitz/http2",
-			"revision": "f8202bc903bda493ebba4aa54922d78430c2c42f",
+			"importpath": "github.com/GeertJohan/go.rice",
+			"repository": "https://github.com/GeertJohan/go.rice",
+			"revision": "ada95a01c963696fb73320ee662195af68be81ae",
+			"branch": "master"
+		},
+		{
+			"importpath": "github.com/daaku/go.zipexe",
+			"repository": "https://github.com/daaku/go.zipexe",
+			"revision": "a5fe2436ffcb3236e175e5149162b41cd28bd27d",
 			"branch": "master"
 		},
 		{
 			"importpath": "github.com/dgrijalva/jwt-go",
 			"repository": "https://github.com/dgrijalva/jwt-go",
-			"revision": "c1da56349675b292d3200463e2c88b9aa5e02391",
+			"revision": "acc5a5f31e3493f1992315fd85aa49226372b810",
 			"branch": "master"
 		},
 		{
@@ -55,26 +61,26 @@
 		{
 			"importpath": "github.com/facebookgo/stats",
 			"repository": "https://github.com/facebookgo/stats",
-			"revision": "31fb71caf5a4f04c9f8bb3fa8e7c2597ba6eb50a",
+			"revision": "1b76add642e42c6ffba7211ad7b3939ce654526e",
 			"branch": "master"
 		},
 		{
 			"importpath": "github.com/fsouza/go-dockerclient",
 			"repository": "https://github.com/fsouza/go-dockerclient",
-			"revision": "cc8cb2dcad73aa53c5f6b5b7927699e9941e6dbe",
+			"revision": "44f75219dec4d25d3ac5483d38d3ada7eaf047ab",
 			"branch": "master"
 		},
 		{
 			"importpath": "github.com/garyburd/redigo/internal",
 			"repository": "https://github.com/garyburd/redigo",
-			"revision": "764a32c188f6ce0bc2565349f0125b3ad4021ea9",
+			"revision": "3d0709611e0e29c05a4e925e8447b065abb4eef6",
 			"branch": "master",
 			"path": "/internal"
 		},
 		{
 			"importpath": "github.com/garyburd/redigo/redis",
 			"repository": "https://github.com/garyburd/redigo",
-			"revision": "764a32c188f6ce0bc2565349f0125b3ad4021ea9",
+			"revision": "3d0709611e0e29c05a4e925e8447b065abb4eef6",
 			"branch": "master",
 			"path": "/redis"
 		},
@@ -85,9 +91,15 @@
 			"branch": "master"
 		},
 		{
+			"importpath": "github.com/kardianos/osext",
+			"repository": "https://github.com/kardianos/osext",
+			"revision": "6e7f843663477789fac7c02def0d0909e969b4e5",
+			"branch": "master"
+		},
+		{
 			"importpath": "github.com/labstack/echo",
 			"repository": "https://github.com/labstack/echo",
-			"revision": "dce83db3442988cb8aaa5662a6360ab128897b03",
+			"revision": "143f563734f7892110fd67c3ebb38c411f74d3bf",
 			"branch": "master"
 		},
 		{
@@ -130,20 +142,27 @@
 		{
 			"importpath": "github.com/tylerb/graceful",
 			"repository": "https://github.com/tylerb/graceful",
-			"revision": "ac9ebe4f1ee151ac1eeeaef32957085cba64d508",
+			"revision": "48afeb21e2fcbcff0f30bd5ad6b97747b0fae38e",
 			"branch": "master"
+		},
+		{
+			"importpath": "golang.org/x/net/http2",
+			"repository": "https://go.googlesource.com/net",
+			"revision": "2cba614e8ff920c60240d2677bc019af32ee04e5",
+			"branch": "master",
+			"path": "/http2"
 		},
 		{
 			"importpath": "golang.org/x/net/netutil",
 			"repository": "https://go.googlesource.com/net",
-			"revision": "db8e4de5b2d6653f66aea53094624468caad15d2",
+			"revision": "2cba614e8ff920c60240d2677bc019af32ee04e5",
 			"branch": "master",
 			"path": "/netutil"
 		},
 		{
 			"importpath": "golang.org/x/net/websocket",
 			"repository": "https://go.googlesource.com/net",
-			"revision": "db8e4de5b2d6653f66aea53094624468caad15d2",
+			"revision": "2cba614e8ff920c60240d2677bc019af32ee04e5",
 			"branch": "master",
 			"path": "/websocket"
 		}

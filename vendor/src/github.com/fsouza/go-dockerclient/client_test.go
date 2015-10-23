@@ -11,6 +11,8 @@ import (
 	"net"
 	"net/http"
 	"net/url"
+	"os"
+	"path/filepath"
 	"reflect"
 	"strconv"
 	"strings"
@@ -26,9 +28,6 @@ func TestNewAPIClient(t *testing.T) {
 	}
 	if client.endpoint != endpoint {
 		t.Errorf("Expected endpoint %s. Got %s.", endpoint, client.endpoint)
-	}
-	if client.HTTPClient != http.DefaultClient {
-		t.Errorf("Expected http.Client %#v. Got %#v.", http.DefaultClient, client.HTTPClient)
 	}
 	// test unix socket endpoints
 	endpoint = "unix:///var/run/docker.sock"
@@ -80,8 +79,53 @@ func TestNewVersionedClient(t *testing.T) {
 	if client.endpoint != endpoint {
 		t.Errorf("Expected endpoint %s. Got %s.", endpoint, client.endpoint)
 	}
-	if client.HTTPClient != http.DefaultClient {
-		t.Errorf("Expected http.Client %#v. Got %#v.", http.DefaultClient, client.HTTPClient)
+	if reqVersion := client.requestedAPIVersion.String(); reqVersion != "1.12" {
+		t.Errorf("Wrong requestAPIVersion. Want %q. Got %q.", "1.12", reqVersion)
+	}
+	if client.SkipServerVersionCheck {
+		t.Error("Expected SkipServerVersionCheck to be false, got true")
+	}
+}
+
+func TestNewVersionedClientFromEnv(t *testing.T) {
+	endpoint := "tcp://localhost:2376"
+	endpointURL := "http://localhost:2376"
+	os.Setenv("DOCKER_HOST", endpoint)
+	os.Setenv("DOCKER_TLS_VERIFY", "")
+	client, err := NewVersionedClientFromEnv("1.12")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if client.endpoint != endpoint {
+		t.Errorf("Expected endpoint %s. Got %s.", endpoint, client.endpoint)
+	}
+	if client.endpointURL.String() != endpointURL {
+		t.Errorf("Expected endpointURL %s. Got %s.", endpoint, client.endpoint)
+	}
+	if reqVersion := client.requestedAPIVersion.String(); reqVersion != "1.12" {
+		t.Errorf("Wrong requestAPIVersion. Want %q. Got %q.", "1.12", reqVersion)
+	}
+	if client.SkipServerVersionCheck {
+		t.Error("Expected SkipServerVersionCheck to be false, got true")
+	}
+}
+
+func TestNewVersionedClientFromEnvTLS(t *testing.T) {
+	endpoint := "tcp://localhost:2376"
+	endpointURL := "https://localhost:2376"
+	base, _ := os.Getwd()
+	os.Setenv("DOCKER_CERT_PATH", filepath.Join(base, "/testing/data/"))
+	os.Setenv("DOCKER_HOST", endpoint)
+	os.Setenv("DOCKER_TLS_VERIFY", "1")
+	client, err := NewVersionedClientFromEnv("1.12")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if client.endpoint != endpoint {
+		t.Errorf("Expected endpoint %s. Got %s.", endpoint, client.endpoint)
+	}
+	if client.endpointURL.String() != endpointURL {
+		t.Errorf("Expected endpointURL %s. Got %s.", endpoint, client.endpoint)
 	}
 	if reqVersion := client.requestedAPIVersion.String(); reqVersion != "1.12" {
 		t.Errorf("Wrong requestAPIVersion. Want %q. Got %q.", "1.12", reqVersion)
@@ -149,7 +193,6 @@ func TestNewTLSClient(t *testing.T) {
 		{"tcp://localhost:4000", "https"},
 		{"http://localhost:4000", "https"},
 	}
-
 	for _, tt := range tests {
 		client, err := newTLSClient(tt.endpoint)
 		if err != nil {
@@ -402,7 +445,7 @@ func TestPingErrorWithUnixSocket(t *testing.T) {
 	endpoint := "unix:///tmp/echo.sock"
 	u, _ := parseEndpoint(endpoint, false)
 	client := Client{
-		HTTPClient:             http.DefaultClient,
+		HTTPClient:             &http.Client{},
 		Dialer:                 &net.Dialer{},
 		endpoint:               endpoint,
 		endpointURL:            u,
