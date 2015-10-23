@@ -17,6 +17,7 @@ package pubsub
 import (
 	"errors"
 	"fmt"
+	//"log"
 )
 
 const (
@@ -25,11 +26,17 @@ const (
 
 	// ZEROMQ PubSub
 	ZEROMQ string = "zeromq"
+
+	// Channel is for publishers
+	Channel = "warhol"
 )
 
 var (
 	// ErrNotSupported is thrown when the broker is not supported
 	ErrNotSupported = errors.New("Broker not supported.")
+
+	// Messaging is the messaging system
+	Messaging Broker
 )
 
 // Message is a pub-sub message.
@@ -37,6 +44,12 @@ type Message struct {
 	Type    string
 	Channel string
 	Data    string
+}
+
+// Config represents the broker configuration
+type Config struct {
+	Type string
+	Host string
 }
 
 // Broker interface for pubsub clients.
@@ -47,16 +60,28 @@ type Broker interface {
 
 	Publish(channel string, message string)
 
-	Receive() (message *Message, err error)
+	Receive()
 }
 
-// InitBroker creates an instance of Broker
-func InitBroker(broker string, host string) (Broker, error) {
+// SetupBroker creates an instance of Broker
+func SetupBroker(broker string, host string) (Broker, error) {
 	switch broker {
 	case REDIS:
 		return NewRedisClient(host)
 	case ZEROMQ:
 		return NewZeroMQClient(host), nil
+	default:
+		return nil, fmt.Errorf("%s %s", ErrNotSupported.Error(), "")
+	}
+}
+
+// NewBroker creates an instance of broker according to the configuration
+func NewBroker(config *Config) (Broker, error) {
+	switch config.Type {
+	case REDIS:
+		return NewRedisClient(config.Host)
+	case ZEROMQ:
+		return NewZeroMQClient(config.Host), nil
 	default:
 		return nil, fmt.Errorf("%s %s", ErrNotSupported.Error(), "")
 	}

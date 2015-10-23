@@ -36,7 +36,11 @@ type Config struct {
 }
 
 // NewPublisher creates a new IRC bot publisher
-func NewPublisher(config *Config, broker pubsub.Broker, debug bool) *Publisher {
+func NewPublisher(config *Config, brokerConf *pubsub.Config, debug bool) (*Publisher, error) {
+	sub, err := pubsub.NewBroker(brokerConf)
+	if err != nil {
+		return nil, err
+	}
 	return &Publisher{
 		Config: &bot.Config{
 			Server:   config.Server,
@@ -47,8 +51,8 @@ func NewPublisher(config *Config, broker pubsub.Broker, debug bool) *Publisher {
 			UseTLS:   true,
 			Debug:    debug,
 		},
-		Broker: broker,
-	}
+		Broker: sub,
+	}, nil
 }
 
 // Run connect to the specified IRC server and starts the bot
@@ -60,13 +64,6 @@ func (p *Publisher) Run() {
 		"",
 		versionCmd)
 	p.Broker.Subscribe(pubsub.Channel)
-	go func() {
-		msg, err := p.Broker.Receive()
-		if err != nil {
-			log.Printf("[WARN] [irc] PubSub error : %s", err.Error())
-		} else {
-			log.Printf("[INFO] [irc] PubSub message: %s", msg)
-		}
-	}()
+	go p.Broker.Receive()
 	go bot.Run(p.Config)
 }

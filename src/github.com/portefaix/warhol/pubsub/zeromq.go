@@ -22,10 +22,6 @@ import (
 	zmq "github.com/pebbe/zmq4"
 )
 
-const (
-	subscription = "warhol"
-)
-
 // ZeroMQClient - just defines the pub and sub ZMQ sockets.
 type ZeroMQClient struct {
 	Pub *zmq.Socket
@@ -33,7 +29,7 @@ type ZeroMQClient struct {
 }
 
 func NewZeroMQClient(host string) *ZeroMQClient {
-	log.Printf("[INFO] [ZeroMQ] PubSub: %s", host)
+	log.Printf("[INFO] [zeromq] PubSub: %s", host)
 	pub, _ := zmq.NewSocket(zmq.PUB)
 	defer pub.Close()
 	pub.Bind(fmt.Sprintf("tcp://%s:%d", host, 5556))
@@ -41,14 +37,14 @@ func NewZeroMQClient(host string) *ZeroMQClient {
 	time.Sleep(time.Second)
 
 	sub, _ := zmq.NewSocket(zmq.SUB)
-	defer sub.Close()
+	//defer sub.Close()
 	sub.Connect(fmt.Sprintf("tcp://%s:%d", host, 5556))
-	sub.SetSubscribe("warhol")
 	return &ZeroMQClient{Pub: pub, Sub: sub}
 }
 
 func (client *ZeroMQClient) Subscribe(channels ...interface{}) error {
 	for _, channel := range channels {
+		log.Printf("[INFO] [zeromq] Subscribe to [%s]\n", channel)
 		client.Sub.SetSubscribe(channel.(string))
 	}
 	return nil
@@ -56,30 +52,35 @@ func (client *ZeroMQClient) Subscribe(channels ...interface{}) error {
 
 func (client *ZeroMQClient) Unsubscribe(channels ...interface{}) error {
 	for _, channel := range channels {
+		log.Printf("[INFO] [zeromq] Unsubscribe to [%s]\n", channel)
 		client.Sub.SetUnsubscribe(channel.(string))
 	}
 	return nil
 }
 
 func (client *ZeroMQClient) Publish(channel, message string) {
-	// 	client.pub.Send([]byte(channel+" "+message), 0)
+	log.Printf("[INFO] [zeromq] Publish: %s to [%s]\n", message, channel)
+	client.Pub.Send(fmt.Sprintf("%s %s", channel, message), 0)
 }
 
-func (client *ZeroMQClient) Receive() (*Message, error) {
-	msg, err := client.Sub.RecvMessage(0)
-	if err != nil {
-		log.Printf("[WARN] [ZeroMQ] Error receiving message: %s", err.Error())
-		return nil, err
+func (client *ZeroMQClient) Receive() {
+	for {
+		message, err := client.Sub.RecvMessage(0)
+		log.Printf("[INFO] [zeromq] Receive: %s \n", message)
+		if err != nil {
+			log.Printf("[WARN] [zeromq] Error receiving message: %s",
+				err.Error())
+		}
+		topic := message[0]
+		data := message[1]
+		if topic != Channel {
+			log.Printf("[WARN] [zeromq] Invalid message: %s %s", topic, data)
+		}
+		msg := &Message{
+			Type:    "message",
+			Channel: topic,
+			Data:    data,
+		}
+		log.Printf("[INFO] [zeromq] Message: %v", msg)
 	}
-	topic := msg[0]
-	data := msg[1]
-	if topic != subscription {
-		log.Printf("[WARN] [ZeroMQ] Invalid message: %s %s", topic, data)
-		return nil, err
-	}
-	return &Message{
-		Type:    "message",
-		Channel: topic,
-		Data:    data,
-	}, nil
 }

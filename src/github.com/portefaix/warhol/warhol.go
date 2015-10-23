@@ -43,6 +43,10 @@ var (
 	registryPassword string
 	registryEmail    string
 
+	// Messaging
+	messaging string
+	redisHost string
+
 	// IRC
 	ircServer   string
 	ircChannel  string
@@ -56,8 +60,10 @@ func init() {
 	flag.BoolVar(&showVersion, "version", false, "print version and exit")
 	flag.BoolVar(&showVersion, "v", false, "print version and exit (shorthand)")
 	flag.BoolVar(&debug, "d", false, "run in debug mode")
+
 	// Web
 	flag.StringVar(&port, "port", "8080", "port to use")
+
 	// Docker
 	flag.StringVar(&dockerHost, "docker-host", "unix:///var/run/docker.sock", "address of Docker host")
 	flag.BoolVar(&dockerTLSVerify, "docker-tls-verify", false, "use TLS client for Docker")
@@ -66,6 +72,12 @@ func init() {
 	flag.StringVar(&registryUsername, "registry-username", "", "Username used for Docker registry")
 	flag.StringVar(&registryPassword, "registry-password", "", "Password used for Docker registry")
 	flag.StringVar(&registryEmail, "registry-email", "", "Email used for Docker registry")
+
+	// Messaging
+	flag.StringVar(&messaging, "messaging", "", "PubSub messaging")
+	flag.StringVar(&redisHost, "redis-host", "", "address of the Redis server")
+
+	// Irc
 	flag.StringVar(&ircServer, "irc-server", "irc.freenode.net:6697", "irc server")
 	flag.StringVar(&ircChannel, "irc-channel", "#portefaix-warhol", "irc channel")
 	flag.StringVar(&ircUser, "irc-user", "WarholBot", "irc user")
@@ -73,20 +85,6 @@ func init() {
 	flag.StringVar(&ircPassword, "irc-pass", "", "irc pass")
 
 	flag.Parse()
-}
-
-func getDockerBuilder(broker pubsub.Broker) (*docker.Builder, error) {
-	return docker.NewBuilder(
-		dockerHost,
-		dockerTLSVerify,
-		dockerCertPath,
-		registryURL,
-		&docker.Authentication{
-			Username: registryUsername,
-			Password: registryPassword,
-			Email:    registryEmail,
-		},
-		broker)
 }
 
 func setupLogging(debug bool) {
@@ -105,30 +103,43 @@ func main() {
 	}
 
 	// Messaging
-
-	log.Print("[INFO] [warhol] Creates the pubsub messaging")
-	//broker := zeromq.NewClient("localhost")
-	broker, err := pubsub.InitBroker("redis", "0.0.0.0")
-	if err != nil {
-		log.Printf("[ERROR] [warhol] %v", err)
+	log.Print("[DEBUG] [warhol] Creates the pubsub messaging")
+	var brokerConf pubsub.Config
+	if messaging == pubsub.REDIS && len(redisHost) > 0 {
+		brokerConf = pubsub.Config{
+			Type: pubsub.REDIS,
+			Host: redisHost,
+		}
+	} else if messaging == pubsub.ZEROMQ {
+		brokerConf = pubsub.Config{
+			Type: pubsub.ZEROMQ,
+		}
+	} else {
+		fmt.Printf("Warhol: Please specify messaging system\n")
 		return
 	}
 
 	// Builder
-
 	log.Print("[INFO] [warhol] Creates the Docker builder")
-	builder, err := getDockerBuilder(broker)
+	builder, err := docker.NewBuilder(
+		dockerHost,
+		dockerTLSVerify,
+		dockerCertPath,
+		registryURL,
+		&docker.Authentication{
+			Username: registryUsername,
+			Password: registryPassword,
+			Email:    registryEmail,
+		},
+		&brokerConf)
 	if err != nil {
 		log.Printf("[FATAL] [warhol] Error with Docker : %v", err)
 		return
 	}
-	go builder.Build()
-	go builder.Push()
 	e := api.GetWebService(builder)
 
 	// Services
-
-	ircBot := irc.NewPublisher(
+	ircBot, err := irc.NewPublisher(
 		&irc.Config{
 			Server:   ircServer,
 			Channel:  ircChannel,
@@ -136,14 +147,20 @@ func main() {
 			Nickname: ircNickname,
 			Password: ircPassword,
 		},
-		broker,
+		&brokerConf,
 		debug)
+	if err != nil {
+		log.Printf("[FATAL] [warhol] %v", err)
+		return
+	}
+	// Launch
 	if debug {
 		e.Debug()
 		builder.Debug()
 	}
+	go builder.Build()
+	go builder.Push()
 	go ircBot.Run()
-
-	log.Printf("[INFO] [warhol] Warhol is ready on %s", port)
+	log.Printf("[INFO] [warhol] Warhol is on %s", port)
 	e.Run(fmt.Sprintf(":%s", port))
 }

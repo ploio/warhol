@@ -73,7 +73,7 @@ type Authentication struct {
 }
 
 // NewBuilder creates a new instance of DockerBuilder
-func NewBuilder(host string, tls bool, certPath string, registryURL string, auth *Authentication, broker pubsub.Broker) (*Builder, error) {
+func NewBuilder(host string, tls bool, certPath string, registryURL string, auth *Authentication, brokerConf *pubsub.Config) (*Builder, error) {
 	var client *docker.Client
 	var err error
 	if tls {
@@ -97,23 +97,25 @@ func NewBuilder(host string, tls bool, certPath string, registryURL string, auth
 	if client.AuthCheck(&authConf) != nil {
 		return nil, ErrDockerAuthentication
 	}
+	pub, err := pubsub.NewBroker(brokerConf)
+	if err != nil {
+		return nil, err
+	}
 	builder := &Builder{
 		Client:      client,
 		RegistryURL: registryURL,
 		AuthConfig:  authConf,
 		BuildChan:   make(chan *Project),
 		PushChan:    make(chan *Project),
-		Broker:      broker,
+		Broker:      pub,
 	}
 	log.Printf("[DEBUG] [docker] Creating Docker builder : %#v", builder)
 	env, err := builder.Client.Version()
 	if err != nil {
-		log.Printf("[WARN] [docker] Can't retrieve Docker version: %v",
-			err)
-	} else {
-		log.Printf("[INFO] [docker] %v", env)
+		return nil, err
 	}
-
+	log.Printf("[INFO] [docker] %v", env)
+	builder.Broker.Publish(pubsub.Channel, fmt.Sprintf("Docker: %v", env))
 	return builder, nil
 }
 
@@ -152,7 +154,7 @@ func (db *Builder) ToPipeline(project *Project) error {
 	log.Printf("[INFO] [docker] Send project to pipeline : %v", project)
 	db.Broker.Publish(pubsub.Channel,
 		fmt.Sprintf("New project request : %s", project))
-	db.BuildChan <- project
+	//db.BuildChan <- project
 	return nil
 }
 

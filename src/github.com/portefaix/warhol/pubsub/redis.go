@@ -17,74 +17,36 @@ package pubsub
 import (
 	"fmt"
 	"log"
+	"sync"
 
 	"github.com/garyburd/redigo/redis"
-)
-
-const (
-	// SOCKET represents the Docker socket endpoint
-	SOCKET = "unix:///var/run/docker.sock"
-
-	// REGISTRY is the default Docker registry
-	REGISTRY = "index.docker.io"
-
-	// ChannelPub is for publishers
-	Channel = "warhol"
-
-	// ChannelSub is for subscribers
-	//ChannelSub = "warhol-sub"
 )
 
 // RedisClient defines the pub-sub Redis client
 type RedisClient struct {
 	Conn       redis.Conn
 	PubSubConn redis.PubSubConn
+	Mutex      sync.Mutex
 }
 
 // NewRedisClient returns a new Redis client
 func NewRedisClient(host string) (*RedisClient, error) {
-	log.Printf("[INFO] [Redis] PubSub: %s", host)
-	host = fmt.Sprintf("%s:6379", host)
-	conn, err := redis.Dial("tcp", host)
+	log.Printf("[INFO] [redis] PubSub: %s", host)
+	conn, err := redis.Dial("tcp", fmt.Sprintf("%s:6379", host))
 	if err != nil {
 		return nil, err
 	}
 	psc := redis.PubSubConn{Conn: conn}
+	//defer conn.Close()
 	return &RedisClient{
 		Conn:       conn,
 		PubSubConn: psc,
 	}, nil
 }
 
-func (client *RedisClient) Publish(channel string, message string) {
-	log.Printf("[INFO] [redis] Publish: %s to %s channel\n", message, channel)
-	client.Conn.Send("PUBLISH", channel, message)
-}
-
-func (client *RedisClient) Receive() (*Message, error) {
-	switch message := client.PubSubConn.Receive().(type) {
-	case redis.Message:
-		msg := &Message{
-			Type:    "message",
-			Channel: message.Channel,
-			Data:    string(message.Data),
-		}
-		log.Printf("[INFO] [redis] Receive: %s from %s channel\n",
-			msg.Channel, msg.Data)
-		return msg, nil
-	case redis.Subscription:
-		return &Message{
-			Type:    message.Kind,
-			Channel: message.Channel,
-			Data:    string(message.Count),
-		}, nil
-	}
-	return nil, nil
-}
-
 func (client *RedisClient) Subscribe(channels ...interface{}) error {
 	for _, channel := range channels {
-		log.Printf("[INFO] [redis] Subscribe to %s\n", channel)
+		log.Printf("[INFO] [redis] Subscribe to [%s]\n", channel)
 		client.PubSubConn.Subscribe(channel)
 	}
 	return nil
@@ -92,7 +54,53 @@ func (client *RedisClient) Subscribe(channels ...interface{}) error {
 
 func (client *RedisClient) Unsubscribe(channels ...interface{}) error {
 	for _, channel := range channels {
+		log.Printf("[INFO] [redis] Unsubscribe to [%s]\n", channel)
 		client.PubSubConn.Unsubscribe(channel)
 	}
 	return nil
+}
+
+func (client *RedisClient) Publish(channel string, message string) {
+	log.Printf("[INFO] [redis] Publish: %s to [%s]\n", message, channel)
+	client.Mutex.Lock()
+	client.Conn.Do("PUBLISH", channel, message)
+	client.Mutex.Unlock()
+}
+
+func (client *RedisClient) Receive() {
+	for {
+		switch message := client.PubSubConn.Receive().(type) {
+		case redis.Message:
+			msg := &Message{
+				Type:    "message",
+				Channel: message.Channel,
+				Data:    string(message.Data),
+			}
+			log.Printf("[INFO] [redis] Receive: %v", msg)
+		case redis.PMessage:
+			msg := &Message{
+				Type:    "pmessage",
+				Channel: message.Channel,
+				Data:    string(message.Data),
+			}
+			log.Printf("[INFO] [redis] Receive: %v", msg)
+		case redis.Pong:
+			msg := &Message{
+				Type:    "pong",
+				Channel: "",
+				Data:    string(message.Data),
+			}
+			log.Printf("[INFO] [redis] Receive: %v", msg)
+		case redis.Subscription:
+			msg := &Message{
+				Type:    message.Kind,
+				Channel: message.Channel,
+				Data:    string(message.Count),
+			}
+			log.Printf("[INFO] [redis] Receive: %v", msg)
+		default:
+			log.Printf("[WARN] [redis] Receive invalid message: %v",
+				message)
+		}
+	}
 }
