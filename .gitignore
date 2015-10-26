@@ -1,6 +1,5 @@
 *~
-bin
-pkg
+
 *.test
 
-auth/
+./auth/
