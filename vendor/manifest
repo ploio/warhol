@@ -2,169 +2,37 @@
 	"version": 0,
 	"dependencies": [
 		{
-			"importpath": "code.google.com/p/go-uuid/uuid",
-			"repository": "https://code.google.com/p/go-uuid",
-			"revision": "35bc42037350",
-			"branch": "default",
-			"path": "/uuid"
-		},
-		{
-			"importpath": "github.com/GeertJohan/go.rice",
-			"repository": "https://github.com/GeertJohan/go.rice",
-			"revision": "ada95a01c963696fb73320ee662195af68be81ae",
-			"branch": "master"
-		},
-		{
-			"importpath": "github.com/daaku/go.zipexe",
-			"repository": "https://github.com/daaku/go.zipexe",
-			"revision": "a5fe2436ffcb3236e175e5149162b41cd28bd27d",
-			"branch": "master"
-		},
-		{
-			"importpath": "github.com/dgrijalva/jwt-go",
-			"repository": "https://github.com/dgrijalva/jwt-go",
-			"revision": "acc5a5f31e3493f1992315fd85aa49226372b810",
-			"branch": "master"
-		},
-		{
-			"importpath": "github.com/fabioxgn/go-bot",
-			"repository": "https://github.com/fabioxgn/go-bot",
-			"revision": "4b8afdebbb46013946db9cd3c6a8c8e6f40495bd",
-			"branch": "master"
-		},
-		{
-			"importpath": "github.com/facebookgo/clock",
-			"repository": "https://github.com/facebookgo/clock",
-			"revision": "600d898af40aa09a7a93ecb9265d87b0504b6f03",
-			"branch": "master"
-		},
-		{
-			"importpath": "github.com/facebookgo/grace/gracehttp",
-			"repository": "https://github.com/facebookgo/grace",
-			"revision": "053ab5d25436faedf3fe76fbf3da797c8c27c659",
+			"importpath": "github.com/docker/docker/pkg/units",
+			"repository": "https://github.com/docker/docker",
+			"revision": "75128c46c7881325c87de8797b455534558784ed",
 			"branch": "master",
-			"path": "/gracehttp"
+			"path": "/pkg/units"
 		},
 		{
-			"importpath": "github.com/facebookgo/grace/gracenet",
-			"repository": "https://github.com/facebookgo/grace",
-			"revision": "053ab5d25436faedf3fe76fbf3da797c8c27c659",
+			"importpath": "github.com/samalba/dockerclient",
+			"repository": "https://github.com/samalba/dockerclient",
+			"revision": "a3241e22d7230854778614ebca9c7f869776c5f0",
+			"branch": "master"
+		},
+		{
+			"importpath": "github.com/stretchr/objx",
+			"repository": "https://github.com/stretchr/objx",
+			"revision": "1a9d0bb9f541897e62256577b352fdbc1fb4fd94",
+			"branch": "master"
+		},
+		{
+			"importpath": "github.com/stretchr/testify/assert",
+			"repository": "https://github.com/stretchr/testify",
+			"revision": "f3960ab1f9664ecc4e27c78af27cc9063d745a43",
 			"branch": "master",
-			"path": "/gracenet"
+			"path": "/assert"
 		},
 		{
-			"importpath": "github.com/facebookgo/httpdown",
-			"repository": "https://github.com/facebookgo/httpdown",
-			"revision": "1fa03998d20119dfe4ef73f56a638d83048052e2",
-			"branch": "master"
-		},
-		{
-			"importpath": "github.com/facebookgo/stats",
-			"repository": "https://github.com/facebookgo/stats",
-			"revision": "1b76add642e42c6ffba7211ad7b3939ce654526e",
-			"branch": "master"
-		},
-		{
-			"importpath": "github.com/fsouza/go-dockerclient",
-			"repository": "https://github.com/fsouza/go-dockerclient",
-			"revision": "44f75219dec4d25d3ac5483d38d3ada7eaf047ab",
-			"branch": "master"
-		},
-		{
-			"importpath": "github.com/garyburd/redigo/internal",
-			"repository": "https://github.com/garyburd/redigo",
-			"revision": "3d0709611e0e29c05a4e925e8447b065abb4eef6",
+			"importpath": "github.com/stretchr/testify/mock",
+			"repository": "https://github.com/stretchr/testify",
+			"revision": "f3960ab1f9664ecc4e27c78af27cc9063d745a43",
 			"branch": "master",
-			"path": "/internal"
-		},
-		{
-			"importpath": "github.com/garyburd/redigo/redis",
-			"repository": "https://github.com/garyburd/redigo",
-			"revision": "3d0709611e0e29c05a4e925e8447b065abb4eef6",
-			"branch": "master",
-			"path": "/redis"
-		},
-		{
-			"importpath": "github.com/hashicorp/logutils",
-			"repository": "https://github.com/hashicorp/logutils",
-			"revision": "0dc08b1671f34c4250ce212759ebd880f743d883",
-			"branch": "master"
-		},
-		{
-			"importpath": "github.com/kardianos/osext",
-			"repository": "https://github.com/kardianos/osext",
-			"revision": "6e7f843663477789fac7c02def0d0909e969b4e5",
-			"branch": "master"
-		},
-		{
-			"importpath": "github.com/labstack/echo",
-			"repository": "https://github.com/labstack/echo",
-			"revision": "143f563734f7892110fd67c3ebb38c411f74d3bf",
-			"branch": "master"
-		},
-		{
-			"importpath": "github.com/labstack/gommon/color",
-			"repository": "https://github.com/labstack/gommon",
-			"revision": "3c613419957bbd5afea3fc87bbc0f9f2dca19196",
-			"branch": "master",
-			"path": "/color"
-		},
-		{
-			"importpath": "github.com/nlopes/slack",
-			"repository": "https://github.com/nlopes/slack",
-			"revision": "4a9ff5f6ed8bb0df51620f49ee90fc0858a2913e",
-			"branch": "master"
-		},
-		{
-			"importpath": "github.com/pebbe/zmq4",
-			"repository": "https://github.com/pebbe/zmq4",
-			"revision": "943819a310d8770c7873aa468b4570dbbc59d3e2",
-			"branch": "master"
-		},
-		{
-			"importpath": "github.com/rs/cors",
-			"repository": "https://github.com/rs/cors",
-			"revision": "eb527c8097e0f19a3ff7b253a3fe70545070f420",
-			"branch": "master"
-		},
-		{
-			"importpath": "github.com/thoas/stats",
-			"repository": "https://github.com/thoas/stats",
-			"revision": "54ed61c2b47e263ae2f01b86837b0c4bd1da28e8",
-			"branch": "master"
-		},
-		{
-			"importpath": "github.com/thoj/go-ircevent",
-			"repository": "https://github.com/thoj/go-ircevent",
-			"revision": "988aaaacd937fc2748708c2a3b8ea5869be4d3a0",
-			"branch": "master"
-		},
-		{
-			"importpath": "github.com/tylerb/graceful",
-			"repository": "https://github.com/tylerb/graceful",
-			"revision": "48afeb21e2fcbcff0f30bd5ad6b97747b0fae38e",
-			"branch": "master"
-		},
-		{
-			"importpath": "golang.org/x/net/http2",
-			"repository": "https://go.googlesource.com/net",
-			"revision": "2cba614e8ff920c60240d2677bc019af32ee04e5",
-			"branch": "master",
-			"path": "/http2"
-		},
-		{
-			"importpath": "golang.org/x/net/netutil",
-			"repository": "https://go.googlesource.com/net",
-			"revision": "2cba614e8ff920c60240d2677bc019af32ee04e5",
-			"branch": "master",
-			"path": "/netutil"
-		},
-		{
-			"importpath": "golang.org/x/net/websocket",
-			"repository": "https://go.googlesource.com/net",
-			"revision": "2cba614e8ff920c60240d2677bc019af32ee04e5",
-			"branch": "master",
-			"path": "/websocket"
+			"path": "/mock"
 		}
 	]
 }
