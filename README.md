@@ -133,3 +133,6 @@ A [changelog](ChangeLog.md) is available
 ## Contact
 
 Nicolas Lamirault <nicolas.lamirault@gmail.com>
+
+
+[badge-license]: https://img.shields.io/badge/license-Apache2-green.svg?style=flat
