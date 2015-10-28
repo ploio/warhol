@@ -1,7 +1,7 @@
 Warhol ChangeLog
 ====================
 
-# Version 0.2.0 (10/23/2015)
+# Version 0.2.0 (10/28/2015)
 
 - Refactoring messaging channels
 - Update Docker registry setup
