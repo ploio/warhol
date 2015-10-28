@@ -4,6 +4,9 @@ machine:
     - sudo rm -rf /usr/local/go
     - sudo tar -C /usr/local -xzf go.tar.gz
     - sudo chmod a+w /usr/local/go/src/
+    - sudo add-apt-repository -y ppa:bpaquet/zeromq4-precise/
+    - sudo apt-get update
+    - sudo apt-get install libzmq-dev
   services:
     - docker
 
