@@ -1,7 +1,7 @@
 # Warhol
 
 [![License Apache 2][badge-license]](LICENSE)
-[![GitHub version](https://badge.fury.io/gh/portefaix%2Fwarhol.svg)](https://badge.fury.io/gh/nlamirault%2Fwarhol)
+[![GitHub version](https://badge.fury.io/gh/portefaix%2Fwarhol.svg)](https://badge.fury.io/gh/portefaix%2Fwarhol)
 
 Master :
 * [![Circle CI](https://circleci.com/gh/portefaix/warhol/tree/master.svg?style=svg)](https://circleci.com/gh/portefaix/warhol/tree/master)
